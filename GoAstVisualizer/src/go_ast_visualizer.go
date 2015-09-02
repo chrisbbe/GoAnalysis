@@ -9,7 +9,9 @@ import (
 	"go/token"
 	"go/ast"
 	"io"
-	"./stack"
+	"../stack"
+	"runtime"
+	"strings"
 )
 
 func main() {
@@ -19,7 +21,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("srcFile = %s\n", srcFile)
+	fmt.Println("## Go Abstract Syntax Tree Visualizer ##")
+	fmt.Printf("Go version: %s\n", runtime.Version())
 
 	src, err := ioutil.ReadFile(srcFile)
 	if err != nil {
@@ -32,7 +35,8 @@ func main() {
 		panic(err)
 	}
 
-	filename := "ast.gv"
+	filename := strings.Join(strings.Split(filepath.Base(srcFile), ".go"), ".gv")
+	fmt.Printf("Outfile: %s\n", filename)
 
 	f, err := os.Create(filename)
 	if err != nil {
@@ -55,7 +59,7 @@ func filenamesFromCommandLine() (srcFilename string, err error) {
 	if len(os.Args) > 2 && os.Args[1] == "-s" {
 		return os.Args[2], nil
 	}
-	err = fmt.Errorf("usage: %s -s goSource.go\n", filepath.Base(os.Args[0]))
+	err = fmt.Errorf("usage: %s -s go_ource.go\n", filepath.Base(os.Args[0]))
 	return "", err
 }
 

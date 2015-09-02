@@ -64,6 +64,8 @@ _testmain.go
 *.xdy
 *.tdo
 
+### Graphviz ###
+*.gv
 
 ### Vim ###
 [._]*.s[a-w][a-z]
@@ -157,5 +159,5 @@ tramp
 # cask packages
 .cask/
 
-# Mac.
+### MacOSX ###
 .DS_Store
