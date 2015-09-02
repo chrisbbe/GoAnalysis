@@ -1,0 +1,17 @@
+digraph AST {
+"*ast.File" -> "*ast.Ident";
+"*ast.File" -> "*ast.GenDecl";
+"*ast.GenDecl" -> "*ast.ImportSpec";
+"*ast.ImportSpec" -> "*ast.BasicLit: STRING";
+"*ast.File" -> "*ast.FuncDecl";
+"*ast.FuncDecl" -> "*ast.Ident";
+"*ast.FuncDecl" -> "*ast.FuncType";
+"*ast.FuncType" -> "*ast.FieldList";
+"*ast.FuncDecl" -> "*ast.BlockStmt";
+"*ast.BlockStmt" -> "*ast.ExprStmt";
+"*ast.ExprStmt" -> "*ast.CallExpr";
+"*ast.CallExpr" -> "*ast.SelectorExpr";
+"*ast.SelectorExpr" -> "*ast.Ident";
+"*ast.SelectorExpr" -> "*ast.Ident";
+"*ast.CallExpr" -> "*ast.BasicLit: STRING";
+}
