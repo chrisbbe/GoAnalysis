@@ -1,21 +1,35 @@
+// This code is part of a master thesis written by
+// Christian Bergum Bergersen at University of Oslo,
+// Faculty of Mathematics and Natural Sciences,
+// Departments of Computer Science.
+
+// TODO: Add some text about license for the code.
+
+// This program utilizes the standard ast package in Go
+// and the corresponding Visit() method to inspect the
+// abstract syntax three for Go programs specified as
+// input, the program then writes dotty codes for each
+// node out to a separate file which can be compiled
+// for graphical visualization of the abstract syntax tree.
+
 package main
 
 import (
+	"./stack"
 	"fmt"
-	"os"
-	"path/filepath"
-	"io/ioutil"
+	"go/ast"
 	"go/parser"
 	"go/token"
-	"go/ast"
 	"io"
-	"../stack"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
 
 func main() {
-	srcFile, err := filenamesFromCommandLine()
+	srcFile, err := GetFilenameFromCommandLine()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -35,73 +49,81 @@ func main() {
 		panic(err)
 	}
 
-	filename := strings.Join(strings.Split(filepath.Base(srcFile), ".go"), ".gv")
-	fmt.Printf("Outfile: %s\n", filename)
+	inFilename := strings.Split(filepath.Base(srcFile), ".go")
+	outFile:= strings.Join(strings.Split(filepath.Base(srcFile), ".go"), ".gv")
+	fmt.Printf("Outfile: %s\n", outFile)
 
-	f, err := os.Create(filename)
+	dottyFile, err := os.Create(outFile)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	writeLine("digraph AST {\n", f)
+	WriteLineToFile("digraph AST {\n", dottyFile)
 
 	fv := new(Visitor)
-	fv.outputFile = f
+	fv.outputFile = dottyFile //Set dotty-file to write tree to!
 	ast.Walk(fv, file)
 
-	writeLine("}\n", f)
-	f.Close()
-	// Print the AST.
-	//ast.Print(fset, file)
+	WriteLineToFile("}\n", dottyFile)
+	dottyFile.Close()
+
+	fmt.Printf("Run: $ dot -Tpdf %s -o %s.pdf\nto create PDF of abstract syntax tree.\n", outFile, inFilename[0])
 }
 
-func filenamesFromCommandLine() (srcFilename string, err error) {
+//TODO: Make more robust.
+func StrExtract(line string, delimiter string) string {
+	splittedString := strings.Split(line, delimiter)
+	if len(splittedString) == 1 {
+		return ""
+	}
+	splittedString = strings.Split(splittedString[1], delimiter)
+	return splittedString[0]
+}
+
+func GetFilenameFromCommandLine() (srcFilename string, err error) {
 	if len(os.Args) > 2 && os.Args[1] == "-s" {
 		return os.Args[2], nil
 	}
-	err = fmt.Errorf("usage: %s -s go_ource.go\n", filepath.Base(os.Args[0]))
+	err = fmt.Errorf("Usage: %s -s go_source.go\n", filepath.Base(os.Args[0]))
 	return "", err
 }
 
-func writeLine(line string, f io.Writer) {
+func WriteLineToFile(line string, f io.Writer) {
 	n, err := io.WriteString(f, line)
-	if(err != nil) {
+	if err != nil {
 		fmt.Println(n, err)
 	}
 }
 
 type Visitor struct {
-	nodeStack stack.Stack
+	nodeStack  stack.Stack
 	outputFile io.Writer
 }
 
-func (v *Visitor) Visit(node ast.Node) (w ast.Visitor)  {
-
-	if(node != nil) {
-		//fmt.Printf("Node: %T\n", node)
-
+func (v *Visitor) Visit(node ast.Node) (w ast.Visitor) {
+	if node != nil {
 		val, _ := v.nodeStack.Top()
-		//fmt.Printf("Father is %T\n\n", val)
 
-		if(val != nil) {
-			var l = ""
-
+		if val != nil {
+			var line = ""
 			switch t := node.(type) {
 
+			case *ast.Ident:
+				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s (Pos: %d)\";\n", val, node, t.Name, t.NamePos)
+
 			case *ast.BasicLit:
-				l = fmt.Sprintf("\"%T\" -> \"%T: %s\";\n", val, node, t.Kind)
+				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s \";\n", val, node, StrExtract(t.Value, "\""))
 
 			default:
-				l = fmt.Sprintf("\"%T\" -> \"%T\";\n", val, node)
+				line = fmt.Sprintf("\t\"%T\" -> \"%T\";\n", val, node)
 			}
-
-			writeLine(l, v.outputFile)
+			WriteLineToFile(line, v.outputFile)
 		}
 	}
 
-	if(node != nil) {
+	if node != nil { //Push node on stack, we will go further down.
 		v.nodeStack.Push(node)
-	} else {
+	} else { //Pop node from stack, going one level up to parent.
 		v.nodeStack.Pop()
 	}
 
