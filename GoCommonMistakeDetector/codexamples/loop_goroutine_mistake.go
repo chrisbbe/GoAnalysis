@@ -1,3 +1,8 @@
+//This little piece of code is used to demonstrate
+//one of the common mistakes done i Go, namely to
+//use goroutines on loop-iterator variables.
+//
+//Author: Christian Bergum Bergersen (chrisbbe@ifi.uio.no)
 package main
 
 import "fmt"
