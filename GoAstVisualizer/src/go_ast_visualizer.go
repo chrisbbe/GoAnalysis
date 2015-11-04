@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	srcFile, err := GetFilenameFromCommandLine()
+	srcFile, err := getFilenameFromCommandLine()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	inFilename := strings.Split(filepath.Base(srcFile), ".go")
-	outFile:= strings.Join(strings.Split(filepath.Base(srcFile), ".go"), ".gv")
+	outFile := strings.Join(strings.Split(filepath.Base(srcFile), ".go"), ".gv")
 	fmt.Printf("Outfile: %s\n", outFile)
 
 	dottyFile, err := os.Create(outFile)
@@ -58,20 +58,21 @@ func main() {
 		fmt.Println(err)
 	}
 
-	WriteLineToFile("digraph AST {\n", dottyFile)
+	writeLineToFile("digraph AST {\n", dottyFile)
 
-	fv := new(Visitor)
+	fv := new(visitor)
 	fv.outputFile = dottyFile //Set dotty-file to write tree to!
 	ast.Walk(fv, file)
 
-	WriteLineToFile("}\n", dottyFile)
+	writeLineToFile("}\n", dottyFile)
 	dottyFile.Close()
 
 	fmt.Printf("Run: $ dot -Tpdf %s -o %s.pdf\nto create PDF of abstract syntax tree.\n", outFile, inFilename[0])
 }
 
 //TODO: Make more robust.
-func StrExtract(line string, delimiter string) string {
+//
+func strExtract(line string, delimiter string) string {
 	splittedString := strings.Split(line, delimiter)
 	if len(splittedString) == 1 {
 		return ""
@@ -80,7 +81,7 @@ func StrExtract(line string, delimiter string) string {
 	return splittedString[0]
 }
 
-func GetFilenameFromCommandLine() (srcFilename string, err error) {
+func getFilenameFromCommandLine() (srcFilename string, err error) {
 	if len(os.Args) > 2 && os.Args[1] == "-s" {
 		return os.Args[2], nil
 	}
@@ -88,19 +89,19 @@ func GetFilenameFromCommandLine() (srcFilename string, err error) {
 	return "", err
 }
 
-func WriteLineToFile(line string, f io.Writer) {
+func writeLineToFile(line string, f io.Writer) {
 	n, err := io.WriteString(f, line)
 	if err != nil {
 		fmt.Println(n, err)
 	}
 }
 
-type Visitor struct {
+type visitor struct {
 	nodeStack  stack.Stack
 	outputFile io.Writer
 }
 
-func (v *Visitor) Visit(node ast.Node) (w ast.Visitor) {
+func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
 	if node != nil {
 		val, _ := v.nodeStack.Top()
 
@@ -112,12 +113,12 @@ func (v *Visitor) Visit(node ast.Node) (w ast.Visitor) {
 				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s (Pos: %d)\";\n", val, node, t.Name, t.NamePos)
 
 			case *ast.BasicLit:
-				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s \";\n", val, node, StrExtract(t.Value, "\""))
+				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s \";\n", val, node, strExtract(t.Value, "\""))
 
 			default:
 				line = fmt.Sprintf("\t\"%T\" -> \"%T\";\n", val, node)
 			}
-			WriteLineToFile(line, v.outputFile)
+			writeLineToFile(line, v.outputFile)
 		}
 	}
 
