@@ -60,9 +60,8 @@ func main() {
 
 	writeLineToFile("digraph AST {\n", dottyFile)
 
-	fv := new(visitor)
-	fv.outputFile = dottyFile //Set dotty-file to write tree to!
-	ast.Walk(fv, file)
+	fv := visitor{fileSet:fset, outputFile:dottyFile}
+	ast.Walk(&fv, file)
 
 	writeLineToFile("}\n", dottyFile)
 	dottyFile.Close()
@@ -70,8 +69,46 @@ func main() {
 	fmt.Printf("Run: $ dot -Tpdf %s -o %s.pdf\nto create PDF of abstract syntax tree.\n", outFile, inFilename[0])
 }
 
-//TODO: Make more robust.
-//
+type visitor struct {
+	fileSet    *token.FileSet
+	nodeStack  stack.Stack
+	outputFile io.Writer
+}
+
+func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
+	if node != nil {
+		val, _ := v.nodeStack.Top()
+
+		if val != nil {
+			var line = ""
+			tt := val.(ast.Node)
+			switch t := node.(type) {
+
+			case *ast.Ident:
+				line = fmt.Sprintf("\t\"%T (Line: %d)\" -> \"%T: %s (Line: %d)\";\n", val,
+					getLineNumberInSourceCode(v.fileSet, tt.Pos()), node, t.Name,
+					getLineNumberInSourceCode(v.fileSet, t.Pos()))
+
+			case *ast.BasicLit:
+				line = fmt.Sprintf("\t\"%T (Line: %d)\" -> \"%T: %s (Line: %d)\";\n", val,
+					getLineNumberInSourceCode(v.fileSet, tt.Pos()), node, strExtract(t.Value, "\""),
+					getLineNumberInSourceCode(v.fileSet, t.Pos()))
+
+			default:
+				line = fmt.Sprintf("\t\"%T (Line: %d)\" -> \"%T (Line: %d)\";\n", val,
+					getLineNumberInSourceCode(v.fileSet, tt.Pos()), node,
+					getLineNumberInSourceCode(v.fileSet, node.Pos()))
+			}
+			writeLineToFile(line, v.outputFile)
+		}
+		v.nodeStack.Push(node) //Push node on stack, we will go further down.
+	} else {
+		v.nodeStack.Pop() //Pop node from stack, going one level up to parent.
+	}
+
+	return v
+}
+
 func strExtract(line string, delimiter string) string {
 	splittedString := strings.Split(line, delimiter)
 	if len(splittedString) == 1 {
@@ -96,37 +133,7 @@ func writeLineToFile(line string, f io.Writer) {
 	}
 }
 
-type visitor struct {
-	nodeStack  stack.Stack
-	outputFile io.Writer
-}
-
-func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
-	if node != nil {
-		val, _ := v.nodeStack.Top()
-
-		if val != nil {
-			var line = ""
-			switch t := node.(type) {
-
-			case *ast.Ident:
-				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s (Pos: %d)\";\n", val, node, t.Name, t.NamePos)
-
-			case *ast.BasicLit:
-				line = fmt.Sprintf("\t\"%T\" -> \"%T: %s \";\n", val, node, strExtract(t.Value, "\""))
-
-			default:
-				line = fmt.Sprintf("\t\"%T\" -> \"%T\";\n", val, node)
-			}
-			writeLineToFile(line, v.outputFile)
-		}
-	}
-
-	if node != nil { //Push node on stack, we will go further down.
-		v.nodeStack.Push(node)
-	} else { //Pop node from stack, going one level up to parent.
-		v.nodeStack.Pop()
-	}
-
-	return v
+func getLineNumberInSourceCode(fileSet *token.FileSet, position token.Pos) (line int) {
+	tokenFile := fileSet.File(position)
+	return tokenFile.Line(position)
 }
