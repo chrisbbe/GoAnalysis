@@ -7,111 +7,35 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"./mistake"
 )
 
 func main() {
-	fmt.Println("This is the Go commom mistake detector... Looking for mistakes...\n")
-
 	srcFile, err := getFilenameFromCommandLine()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	src, err := ioutil.ReadFile(srcFile)
+	fmt.Println("This is the Go commom mistake detector... Looking for mistakes...\n")
+	sourceFile, err := ioutil.ReadFile(srcFile)
 	if err != nil {
 		fmt.Printf("Error:\n")
 	}
 
-	// Create the AST by parsing src.
-	fset := token.NewFileSet() // positions are relative to fset
-	f, err := parser.ParseFile(fset, "", src, 0)
+	result, err := mistake.FindCommonMistakes(sourceFile)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
-	visitor := visitor{fileSet: fset}
-	ast.Walk(&visitor, f)
-}
-
-type visitor struct {
-	fileSet *token.FileSet
-}
-
-func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
-	switch t := node.(type) {
-	case *ast.GoStmt:
-		if findRaceInGoRoutine(t) {
-			fmt.Printf("Warning: Potential race-condition found on line %d.\n", getLineNumberInSourceCode(v.fileSet, t.Pos()))
-		}
-	case *ast.BadDecl:
-		printParsingErrorMsg(v.fileSet, t.Pos())
-		os.Exit(1)
-	case *ast.BadExpr:
-		printParsingErrorMsg(v.fileSet, t.Pos())
-		os.Exit(1)
-	case *ast.BadStmt:
-		printParsingErrorMsg(v.fileSet, t.Pos())
-		os.Exit(1)
-	}
-	return v
-}
-
-func printParsingErrorMsg(fileSet *token.FileSet, position token.Pos) {
-	fmt.Printf("Error: Parse error at line %d.\n", getLineNumberInSourceCode(fileSet, position))
-}
-
-func findRaceInGoRoutine(goNode *ast.GoStmt) (races bool) {
-	switch t := goNode.Call.Fun.(type) {
-	case *ast.FuncLit:
-		params := t.Type.Params.List
-		for _, each := range t.Body.List {
-			switch t1 := each.(type) {
-			case *ast.ExprStmt:
-				if !validateParams(t1, params) {
-					return true
-				}
-			}
+	for _, value := range result {
+		if value.MistakeType == mistake.RACE_CONDITION {
+			fmt.Printf("Warning: Potential race-condition found on line %d.\n", value.LineInSourceFile)
 		}
 	}
-	return false
-}
-
-func validateParams(node *ast.ExprStmt, List []*ast.Field) (valid bool) {
-	switch t := node.X.(type) {
-	case *ast.CallExpr:
-		for _, each := range t.Args {
-			switch t1 := each.(type) {
-			case *ast.Ident:
-				if !containsListParam(t1, List) {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
-func containsListParam(ident *ast.Ident, List []*ast.Field) (found bool) {
-	for _, each := range List {
-		for _, each1 := range each.Names {
-			if each1.Name == ident.Name {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func getLineNumberInSourceCode(fileSet *token.FileSet, position token.Pos) (line int) {
-	tokenFile := fileSet.File(position)
-	return tokenFile.Line(position)
 }
 
 func getFilenameFromCommandLine() (srcFilename string, err error) {

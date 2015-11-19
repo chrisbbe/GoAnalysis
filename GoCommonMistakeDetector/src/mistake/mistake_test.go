@@ -1,11 +1,28 @@
 package mistake
 
-import "testing"
+import (
+	"testing"
+	"io/ioutil"
+)
+
+func TestEquality(t *testing.T) {
+	t.Error("Failed")
+}
 
 func TestUsageOfLoopVariableInGoroutine(t *testing.T) {
-	a := 1
-	b := 1
-	if a != b {
-		t.Errorf("%d != %d", a, b)
+	srcFile, err := "/testSourceCode/loop_goroutine_mistake.go"
+	if err != nil {
+		t.Error(err)
 	}
+
+	sourceFile, err := ioutil.ReadFile(srcFile)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = FindCommonMistakes(sourceFile)
+	if err != nil {
+		t.Error("Failed to do something")
+	}
+
 }
