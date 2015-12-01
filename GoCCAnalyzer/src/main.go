@@ -14,18 +14,20 @@ import (
 
 func main() {
 	getBasicBlocks()
-	generateGraph()
+	//generateGraph()
 }
 
 func generateGraph() {
-	g := graph.New()
+	srcFile := "../directedgraph.txt"
 
-	file, err := os.Open("./directedgraph.txt")
+	file, err := os.Open(srcFile)
 	if err != nil {
-		fmt.Println("Error opening file!")
+		fmt.Printf("Error opening file %s!\n", srcFile)
 		os.Exit(1)
 	}
 	defer file.Close()
+
+	g := graph.New()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -42,11 +44,12 @@ func generateGraph() {
 }
 
 func getBasicBlocks() {
-	srcFile := "./test_src.go"
+	srcFile := "../codeexamples/_ifelse.go"
 
 	sourceFile, err := ioutil.ReadFile(srcFile)
 	if err != nil {
-		fmt.Printf("Error finding file\n")
+		fmt.Printf("Error finding file %s!\n", srcFile)
+		os.Exit(1)
 	}
 
 	fset := token.NewFileSet()
@@ -58,6 +61,6 @@ func getBasicBlocks() {
 	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
 
 	for _, bb := range basicBlocks {
-		fmt.Printf("################## BLOCK NR. %d (%d - %d) ##################\n", bb.Number, bb.FromLine, bb.ToLine)
+		fmt.Printf("################## BLOCK NR. %d (%d - %d) %s ##################\n", bb.Number, bb.FromLine, bb.ToLine, bb.Value)
 	}
 }
