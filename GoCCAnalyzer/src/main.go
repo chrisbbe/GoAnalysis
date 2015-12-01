@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"go/token"
 	"go/parser"
-	"GoThesis/GoCCAnalyzer/src/bblock"
-	"GoThesis/GoCCAnalyzer/src/graph"
+	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/graph"
+	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/bblock"
 )
 
 func main() {
