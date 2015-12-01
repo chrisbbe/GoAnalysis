@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"GoThesis/Stack/src"
+	"github.com/chrisbbe/GoThesis/Stack/src"
 )
 
 func main() {
