@@ -15,7 +15,6 @@
 package main
 
 import (
-	"./stack"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -26,6 +25,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"GoThesis/Stack/src"
 )
 
 func main() {
