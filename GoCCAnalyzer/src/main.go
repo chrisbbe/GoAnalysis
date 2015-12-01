@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./graph"
 	"bufio"
 	"fmt"
 	"os"
@@ -9,7 +8,8 @@ import (
 	"io/ioutil"
 	"go/token"
 	"go/parser"
-	"./bblock"
+	"GoThesis/GoCCAnalyzer/src/bblock"
+	"GoThesis/GoCCAnalyzer/src/graph"
 )
 
 func main() {
