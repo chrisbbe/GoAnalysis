@@ -9,7 +9,6 @@ func main() {
 	} else { //4
 		fmt.Printf("False") //5
 	}
-
 	fmt.Printf("hey")
 	fmt.Printf("Jada")
 	//6
