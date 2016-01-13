@@ -1,3 +1,24 @@
+// The MIT License (MIT)
+
+// Copyright (c) 2015-2016 Christian Bergum Bergersen
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 package main
 
 import (
@@ -8,14 +29,14 @@ import (
 	"io/ioutil"
 	"go/token"
 	"go/parser"
-	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/graph"
-	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/bblock"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/graph"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/bblock"
 )
 
 func main() {
 	generateControlFlowGraph()
-	//getBasicBlocks()
-	//generateGraph()
+	getBasicBlocks()
+	generateGraph()
 }
 
 func generateGraph() {
@@ -45,11 +66,11 @@ func generateGraph() {
 }
 
 func getBasicBlocks() {
-	srcFile := "../codeexamples/_ifelse.go"
+	srcFile := "./bblock/_nestedifelse.go"
 
 	sourceFile, err := ioutil.ReadFile(srcFile)
 	if err != nil {
-		fmt.Printf("Error finding file %s!\n", srcFile)
+		fmt.Printf("File does not exist: %s!\n", srcFile)
 		os.Exit(1)
 	}
 
@@ -59,27 +80,30 @@ func getBasicBlocks() {
 		panic(err)
 	}
 
-	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
+	basicBlocks := bblock.GetBasicBlocksFromSourceCode(file)
 
 	for _, bb := range basicBlocks {
-		fmt.Printf("################## BLOCK NR. %d (%d - %d) %s ##################\n", bb.Number, bb.FromLine, bb.ToLine, bb.Value)
+		fmt.Printf("******** BLOCK NR. %d (%s) ******************\n", bb.Number, bb.Type.String())
+
+		fmt.Printf("\t\tHead: %T, Tail: %T\n", bb.Head, bb.Tail)
+
+		for _, s := range bb.Successor {
+			fmt.Printf("\t\t- BLOCK NR. %d (%s)\n", s.Number, s.Type.String())
+		}
 	}
 }
 
-type cfgNode struct {
-	Value      string
-	bb         *bblock.BasicBlock
-	ifTrueJmp  *bblock.BasicBlock
-	ifFalseJmp *bblock.BasicBlock
+type controlFlowNode struct {
+	Value string
+	bb    *bblock.BasicBlock
 }
 
 func generateControlFlowGraph() {
-
 	srcFile := "../codeexamples/_ifelse.go"
 
 	sourceFile, err := ioutil.ReadFile(srcFile)
 	if err != nil {
-		fmt.Printf("Error finding file %s!\n", srcFile)
+		fmt.Printf("File does not exist: %s!\n", srcFile)
 		os.Exit(1)
 	}
 
@@ -89,45 +113,7 @@ func generateControlFlowGraph() {
 		panic(err)
 	}
 
-	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
+	basicBlocks := bblock.GetBasicBlocksFromSourceCode(file)
 
 	fmt.Printf("Number of basicBlocks: %d\n", len(basicBlocks))
-	g := graph.New()
-
-
-
-	entryCfg := cfgNode{Value:fmt.Sprintf("%d) %s", 0, "Entry")}
-	entry := graph.Node{Value:entryCfg}
-
-	var prevNode *graph.Node = nil
-
-	for i, v := range basicBlocks {
-		line := fmt.Sprintf("%d) %s", i, v.Value)
-		cfgNode := cfgNode{Value:line, bb:v}
-
-		if v.Value == "If" { //Hack
-			cfgNode.ifTrueJmp = basicBlocks[i + 1] //Always are If-True-jump currentBlock + 1
-			cfgNode.ifFalseJmp = basicBlocks[i + 3]
-		}
-
-		node := graph.Node{Value:cfgNode}
-
-		if prevNode == nil { //First node after entry.
-			g.InsertNode(&entry, &node)
-		} else {
-			g.InsertNode(prevNode, &node)
-		}
-		prevNode = &node
-	}
-
-	exit := graph.Node{Value:fmt.Sprintf("%d) %s", len(basicBlocks), "Exit")}
-	g.InsertNode(prevNode, &exit)
-
-	dfs := g.GetDFS()
-	fmt.Printf("Number of nodes in DFS %d\n", len(dfs))
-
-	for _, key := range dfs {
-		//fmt.Printf("%s\n", key)
-		fmt.Println(key)
-	}
 }
