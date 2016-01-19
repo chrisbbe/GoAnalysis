@@ -19,47 +19,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-package graph
+package main // BB #0 starting.
 
-import (
-	"testing"
-)
+import "fmt"
 
+func main() { // BB #1 starting.
+	number := 1
+	secondNumber := 3
 
-func TestDepthFirstSearchInGraph(t *testing.T) {
-	//Create some nodes.
-	a := Node{Value:"A"}
-	b := Node{Value:"B"}
-	c := Node{Value:"C"}
-	d := Node{Value:"D"}
-	e := Node{Value:"E"}
-	f := Node{Value:"F"}
-	g := Node{Value:"G"}
-	h := Node{Value:"H"}
+	switch number { // BB #2 starting.
 
-	graph := New()
+	case 0: // BB #3 starting.
+		fmt.Println("0")
+	case 1: // BB #4 starting.
+		fmt.Println("2")
+		switch secondNumber { // BB #5 starting.
 
-	//Add directed node-pairs to graph.
-	graph.InsertNode(&a, &b)
-	graph.InsertNode(&a, &d)
-	graph.InsertNode(&b, &d)
-	graph.InsertNode(&b, &c)
-	graph.InsertNode(&c, &e)
-	graph.InsertNode(&e, &g)
-	graph.InsertNode(&e, &f)
-	graph.InsertNode(&f, &h)
-
-	dfs := graph.GetDFS()
-	correctDfs := []string{"A", "B", "D", "C", "E", "G", "F", "H"}
-
-	//First test length of both DFS-lists.
-	if len(correctDfs) != len(dfs) {
-		t.Errorf("Length of DFS (%d) is not equal length of correct DFS (%d)!\n", len(dfs), len(correctDfs))
-	}
-	//Compare DFS with correct DFS.
-	for i := 0; i < len(dfs); i++ {
-		if dfs[i].Value != correctDfs[i] {
-			t.Errorf("Index %d in DFS-list is %s, should be %s!\n", i, dfs[i].Value, correctDfs[i])
+		case 1: // BB #6 starting.
+			fmt.Println("1")
+		case 2: // BB #7 starting.
+			fmt.Println("2")
+		default: // BB #8 starting.
+			fmt.Printf("No match, secondNumber is %d!\n", number)
 		}
+	case 3: // BB #9 starting.
+		fmt.Println("3")
+	case 4: // BB #10 starting.
+		fmt.Println("4")
+	default: // BB #11 starting.
+		fmt.Printf("No match, number is %d!\n", number)
 	}
 }

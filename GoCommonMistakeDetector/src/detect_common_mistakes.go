@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"github.com/chrisbbe/GoThesis/GoCommonMistakeDetector/src/mistake"
+	"github.com/chrisbbe/GoAnalysis/GoCommonMistakeDetector/src/mistake"
 )
 
 func main() {

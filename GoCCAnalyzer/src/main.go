@@ -35,8 +35,8 @@ import (
 
 func main() {
 	generateControlFlowGraph()
-	getBasicBlocks()
-	generateGraph()
+	//getBasicBlocks()
+	//generateGraph()
 }
 
 func generateGraph() {
@@ -113,7 +113,29 @@ func generateControlFlowGraph() {
 		panic(err)
 	}
 
-	basicBlocks := bblock.GetBasicBlocksFromSourceCode(file)
+	controlFlowGraph := graph.New()
 
-	fmt.Printf("Number of basicBlocks: %d\n", len(basicBlocks))
+	for _, basicBlock := range bblock.GetBasicBlocksFromSourceCode(file) {
+		if len(basicBlock.Successor) != 0 {
+			value := fmt.Sprintf("%s (%d)", basicBlock.Type.String(), basicBlock.Number)
+			leftNode := graph.Node{Value:controlFlowNode{Value:value, bb:basicBlock}}
+
+			for _, successorBlock := range basicBlock.Successor {
+				value := fmt.Sprintf("%s (%d)", successorBlock.Type.String(), successorBlock.Number)
+				rightNode := graph.Node{Value:controlFlowNode{Value:value, bb:successorBlock}}
+				controlFlowGraph.InsertNode(&leftNode, &rightNode)
+			}
+		}
+	}
+
+	fmt.Printf("Number of nodes in graph: %d\n", controlFlowGraph.GetNumberOfNodes())
+	fmt.Printf("Number of edges in graph: %d\n", controlFlowGraph.GetNumberOfEdges())
+	cyclomaticComplexity := controlFlowGraph.GetNumberOfEdges() - controlFlowGraph.GetNumberOfNodes() + 2
+	fmt.Printf("Cyclomatic complexity: %d\n", cyclomaticComplexity)
+
+	fmt.Println("\n* Depth First Search *")
+	for _, node := range controlFlowGraph.GetDFS() {
+		fmt.Printf("%s\n", node.Value.(controlFlowNode).Value)
+	}
+
 }
