@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"go/token"
 	"go/parser"
-	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/graph"
-	"github.com/chrisbbe/GoThesis/GoCCAnalyzer/src/bblock"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/graph"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/bblock"
 )
 
 func main() {
@@ -28,14 +28,14 @@ func generateGraph() {
 	}
 	defer file.Close()
 
-	g := graph.New()
+	g := graph.NewGraph()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.Split(scanner.Text(), " -> ")
 		left := graph.Node{Value: line[0]}
 		right := graph.Node{Value: line[1]}
-		g.InsertNode(&left, &right)
+		g.InsertEdge(&left, &right)
 	}
 
 	fmt.Println("### DFS Printout ###")
@@ -92,9 +92,7 @@ func generateControlFlowGraph() {
 	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
 
 	fmt.Printf("Number of basicBlocks: %d\n", len(basicBlocks))
-	g := graph.New()
-
-
+	g := graph.NewGraph()
 
 	entryCfg := cfgNode{Value:fmt.Sprintf("%d) %s", 0, "Entry")}
 	entry := graph.Node{Value:entryCfg}
@@ -105,23 +103,25 @@ func generateControlFlowGraph() {
 		line := fmt.Sprintf("%d) %s", i, v.Value)
 		cfgNode := cfgNode{Value:line, bb:v}
 
-		if v.Value == "If" { //Hack
+		if v.Value == "If" {
+			//Hack
 			cfgNode.ifTrueJmp = basicBlocks[i + 1] //Always are If-True-jump currentBlock + 1
 			cfgNode.ifFalseJmp = basicBlocks[i + 3]
 		}
 
 		node := graph.Node{Value:cfgNode}
 
-		if prevNode == nil { //First node after entry.
-			g.InsertNode(&entry, &node)
+		if prevNode == nil {
+			//First node after entry.
+			g.InsertEdge(&entry, &node)
 		} else {
-			g.InsertNode(prevNode, &node)
+			g.InsertEdge(prevNode, &node)
 		}
 		prevNode = &node
 	}
 
 	exit := graph.Node{Value:fmt.Sprintf("%d) %s", len(basicBlocks), "Exit")}
-	g.InsertNode(prevNode, &exit)
+	g.InsertEdge(prevNode, &exit)
 
 	dfs := g.GetDFS()
 	fmt.Printf("Number of nodes in DFS %d\n", len(dfs))
