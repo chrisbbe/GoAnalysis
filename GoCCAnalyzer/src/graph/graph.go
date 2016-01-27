@@ -20,12 +20,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// Package 'graph' implements a data structure to represent directed graphs by
+// node objects and unweight edges between nodes. Common graph operations
+// like dept-first-search and detection of strongly connected components are
+// provided.
 package graph
 
 import (
 	"github.com/chrisbbe/GoAnalysis/Stack/src"
 )
 
+// Graph is the main datastructure
+// representing the graph.
+// Holding references to the root node
+// and all nodes in the graph.
 type Graph struct {
 	Root     *Node
 	Nodes    map[interface{}]*Node
@@ -34,6 +42,10 @@ type Graph struct {
 	stack    stack.Stack // Used by SCC.
 }
 
+// Node represents a single node in the graph
+// 'Value' holds the node value, the other
+// fields contains information used internally
+// by algorithms.
 type Node struct {
 	Value    interface{}
 	visited  bool
@@ -42,27 +54,40 @@ type Node struct {
 	low      int // Used by SCC.
 }
 
+// StronglyConnectedComponent represent
+// a all 'Nodes' in a detected strongly
+// connected component.
 type StronglyConnectedComponent struct {
 	Nodes []*Node
 }
 
+// NewGraph initialize and returns a pointer to a
+// new graph object.
 func NewGraph() *Graph {
 	return &Graph{Nodes: map[interface{}]*Node{}}
 }
 
-func (n *Node) insertOutNode(node *Node) {
+// insertOutNode inserts outgoing directed
+// edge to 'node'.
+func (n *Node) insertOutEdge(node *Node) {
 	n.outEdges = append(n.outEdges, node)
 }
 
-func (n *Node) insertInNode(node *Node) {
+// insertInEdge inserts ingoing directed
+// edge to 'node'.
+func (n *Node) insertInEdge(node *Node) {
 	n.inEdges = append(n.inEdges, node)
 }
 
+// InsertEdge inserts directed edge between
+// leftNode and rightNode. It also inserts
+// the node in the graph correctly if the
+// node does not already exist in the graph.
 func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
 	if len(graph.Nodes) == 0 {
 		graph.Root = leftNode
-		graph.Root.insertOutNode(rightNode)
-		rightNode.insertInNode(graph.Root)
+		graph.Root.insertOutEdge(rightNode)
+		rightNode.insertInEdge(graph.Root)
 		graph.Nodes[graph.Root.Value] = graph.Root
 		graph.Nodes[rightNode.Value] = rightNode
 	} else {
@@ -75,18 +100,20 @@ func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
 		}
 
 		if graph.Nodes[leftNode.Value] == nil {
-			leftNode.insertOutNode(rightNode)
-			rightNode.insertInNode(leftNode)
+			leftNode.insertOutEdge(rightNode)
+			rightNode.insertInEdge(leftNode)
 			graph.Nodes[leftNode.Value] = leftNode
 			graph.Nodes[rightNode.Value] = rightNode
 		} else {
-			leftNode.insertOutNode(rightNode)
-			rightNode.insertInNode(leftNode)
+			leftNode.insertOutEdge(rightNode)
+			rightNode.insertInEdge(leftNode)
 			graph.Nodes[rightNode.Value] = rightNode
 		}
 	}
 }
 
+// getDFS is an internal helper method
+// for GetDFS() to perform depth first search.
 func (node *Node) getDFS() (nodes []*Node) {
 	if !node.visited {
 		nodes = append(nodes, node)
@@ -100,6 +127,8 @@ func (node *Node) getDFS() (nodes []*Node) {
 	return nodes
 }
 
+// GetDFS perfoms depth first search in the
+// 'graph' and returns the result in 'nodes'.
 func (graph *Graph) GetDFS() (nodes []*Node) {
 	nodes = graph.Root.getDFS()
 	//Clean up nodes by setting visited = false
@@ -109,6 +138,9 @@ func (graph *Graph) GetDFS() (nodes []*Node) {
 	return nodes
 }
 
+// dfs is internal modified depth first
+// search method for GetSCComponents
+// to find strongly connected components.
 func (graph *Graph) dfs(v *Node) {
 	v.low = graph.preCount
 	graph.preCount++
@@ -138,10 +170,14 @@ func (graph *Graph) dfs(v *Node) {
 		w.(*Node).low = len(graph.Nodes) - 1
 	}
 
-	graph.scc = append(graph.scc, &StronglyConnectedComponent{Nodes:component})
+	graph.scc = append(graph.scc, &StronglyConnectedComponent{Nodes: component})
 }
 
-func (graph *Graph) GetSCComponents() ([]*StronglyConnectedComponent) {
+// GetSCComponents performs Tarjans algorithm to detect
+// strongly connected components in 'graph', returns
+// a list of lists containing nodes in each strongly
+// connected component.
+func (graph *Graph) GetSCComponents() []*StronglyConnectedComponent {
 	graph.scc = []*StronglyConnectedComponent{} //Init list.
 	for _, node := range graph.Nodes {
 		if !node.visited {
@@ -159,21 +195,40 @@ func (graph *Graph) GetSCComponents() ([]*StronglyConnectedComponent) {
 	return graph.scc
 }
 
-func (graph *Graph) GetNumberOfNodes() (int) {
+// GetNumberOfNodes returns number of
+// nodes in 'graph'.
+func (graph *Graph) GetNumberOfNodes() int {
 	return len(graph.Nodes)
 }
 
+// GetNumberOfEdges returns number of
+// edges in 'graph'.
 func (graph *Graph) GetNumberOfEdges() (numberOfEdges int) {
 	for _, node := range graph.Nodes {
-		numberOfEdges += len(node.outEdges)
+		numberOfEdges += node.GetOutDegree()
 	}
 	return numberOfEdges
 }
 
-func (graph *Graph) GetNumberOfSCComponents() (int) {
+// GetNumberOfSCComponents return number of
+// strongly connected components in 'graph'.
+func (graph *Graph) GetNumberOfSCComponents() int {
 	//We don't want to run Tarjan's once again if algorithm is already executed.
 	if graph.scc == nil {
 		return len(graph.GetSCComponents())
 	}
 	return len(graph.scc)
 }
+
+// GetInDegree returns number of ingoing
+// edges to 'node'.
+func (node *Node) GetInDegree() int {
+	return len(node.inEdges)
+}
+
+// GetOutDegree returns number of outgoing
+// edges from 'node'.
+func (node *Node) GetOutDegree() int {
+	return len(node.outEdges)
+}
+
