@@ -11,6 +11,7 @@ import (
 //Mistake types.
 const (
 	RACE_CONDITION = iota  // 0
+	FMT_PRINTING = iota // 1
 )
 
 //Representing mistakes found when
@@ -62,25 +63,34 @@ func FindCommonMistakes(sourceFile []byte) (mistakes []Mistake, walkError error)
 	return visitor.mistakes, walkError
 }
 
-func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
+func (visitor *visitor) Visit(node ast.Node) (w ast.Visitor) {
 	switch t := node.(type) {
 	case *ast.GoStmt:
 		if findRaceInGoRoutine(t) {
-			sourceLineNumber := getLineNumberInSourceCode(v.fileSet, t.Pos())
+			sourceLineNumber := getLineNumberInSourceCode(visitor.fileSet, t.Pos())
 			newMistake := Mistake{LineInSourceFile:sourceLineNumber, MistakeType:RACE_CONDITION}
-			v.mistakes = append(v.mistakes, newMistake)
+			visitor.mistakes = append(visitor.mistakes, newMistake)
 		}
+	case *ast.SelectorExpr:
+		value, ok := t.X.(*ast.Ident)
+		if ok && value.Name == "fmt" && (t.Sel.Name == "Print" || t.Sel.Name == "Println" || t.Sel.Name == "Printf" || t.Sel.Name == "Fprintln" || t.Sel.Name == "Fprintf" || t.Sel.Name == "Errorf") {
+			sourceLineNumber := getLineNumberInSourceCode(visitor.fileSet, t.Pos())
+			newMistake := Mistake{LineInSourceFile:sourceLineNumber, MistakeType:FMT_PRINTING}
+			visitor.mistakes = append(visitor.mistakes, newMistake)
+		}
+
+	//TODO: Should we care about everything that is bad, or is it catched somwhere else?
 	case *ast.BadDecl:
-		sourceLineNumber := getLineNumberInSourceCode(v.fileSet, t.Pos())
+		sourceLineNumber := getLineNumberInSourceCode(visitor.fileSet, t.Pos())
 		panic(fmt.Sprintf("Error: Parse error at line %d.\n", sourceLineNumber))
 	case *ast.BadExpr:
-		sourceLineNumber := getLineNumberInSourceCode(v.fileSet, t.Pos())
+		sourceLineNumber := getLineNumberInSourceCode(visitor.fileSet, t.Pos())
 		panic(fmt.Sprintf("Error: Parse error at line %d.\n", sourceLineNumber))
 	case *ast.BadStmt:
-		sourceLineNumber := getLineNumberInSourceCode(v.fileSet, t.Pos())
+		sourceLineNumber := getLineNumberInSourceCode(visitor.fileSet, t.Pos())
 		panic(fmt.Sprintf("Error: Parse error at line %d.\n", sourceLineNumber))
 	}
-	return v
+	return visitor
 }
 
 func findRaceInGoRoutine(goNode *ast.GoStmt) (races bool) {

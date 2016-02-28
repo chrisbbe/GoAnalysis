@@ -34,6 +34,8 @@ func main() {
 	for _, value := range result {
 		if value.MistakeType == mistake.RACE_CONDITION {
 			fmt.Printf("Warning: Potential race-condition found on line %d.\n", value.LineInSourceFile)
+		} else if value.MistakeType == mistake.FMT_PRINTING {
+			fmt.Printf("Warning: Printing via package fmt is not safe from concurrent goroutines, use the log package instead.\n")
 		}
 	}
 }
