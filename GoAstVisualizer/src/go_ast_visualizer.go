@@ -31,8 +31,7 @@ import (
 func main() {
 	srcFile, err := getFilenameFromCommandLine()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	fmt.Println("## Go Abstract Syntax Tree Visualizer ##")
@@ -40,7 +39,7 @@ func main() {
 
 	src, err := ioutil.ReadFile(srcFile)
 	if err != nil {
-		fmt.Printf("Error:\n")
+		panic(err)
 	}
 
 	fset := token.NewFileSet()
@@ -55,7 +54,7 @@ func main() {
 
 	dottyFile, err := os.Create(outFile)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	writeLineToFile("digraph AST {\n", dottyFile)
@@ -129,6 +128,7 @@ func getFilenameFromCommandLine() (srcFilename string, err error) {
 func writeLineToFile(line string, f io.Writer) {
 	n, err := io.WriteString(f, line)
 	if err != nil {
+		//TODO: What the hell is going on here?
 		fmt.Println(n, err)
 	}
 }

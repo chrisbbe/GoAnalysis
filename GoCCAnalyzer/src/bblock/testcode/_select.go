@@ -19,21 +19,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+package main // BB #0 starting.
 
-// CAUTION: This file in used by a unit test in file basicblock_test.go,
-// changing the structure or logic in the program will with high possibility
-// break the test and give false positive errors. Please DO NOT change this
-// file unless you know what you are doing!
-package main //BB #0 starting.
-
-import "fmt"
+import (
+	"os"
+	"fmt"
+	"time"
+)
 
 func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
-		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
-		fmt.Printf("False")
+	stop := make(chan int)
+
+	go func() { // BB #2 starting.
+		os.Stdin.Read(make([]byte, 1))
+		stop <- 1
+	}()
+
+	fmt.Println("Started timer, press return to stop watch.")
+	tick := time.Tick(time.Second)
+	for time := 0;; time++ { // BB #3 starting.
+		select { // BB #4 starting.
+		case <-tick: // BB #5 starting.
+			fmt.Println(time)
+		case <-stop: // BB #6 starting.
+			fmt.Printf("Watch stopped after %d seconds.\n", time)
+			return
+		}
 	}
 }

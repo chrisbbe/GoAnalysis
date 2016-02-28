@@ -24,16 +24,22 @@
 // changing the structure or logic in the program will with high possibility
 // break the test and give false positive errors. Please DO NOT change this
 // file unless you know what you are doing!
-package main //BB #0 starting.
+package main // BB #0 starting.
 
 import "fmt"
 
 func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
+	if true { // BB #2 starting
 		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
+		if false { // BB #3 starting.
+			fmt.Println("False")
+		}
+	} else { // BB #4 starting.
 		fmt.Printf("False")
+		if true { // BB #5 starting.
+			fmt.Println("True")
+		} else { // BB #6 starting.
+			fmt.Println("False")
+		}
 	}
 }

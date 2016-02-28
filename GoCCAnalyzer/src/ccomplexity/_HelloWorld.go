@@ -20,20 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// CAUTION: This file in used by a unit test in file basicblock_test.go,
+// CAUTION: This file in used by a unit test in file cyclocomplexity_test.go,
 // changing the structure or logic in the program will with high possibility
 // break the test and give false positive errors. Please DO NOT change this
 // file unless you know what you are doing!
-package main //BB #0 starting.
-
-import "fmt"
+package main // BB #0 starting.
 
 func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
-		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
-		fmt.Printf("False")
-	}
+	fmt.Println("Hello World")
 }
+
+// Cyclomatic Complexity M = E - N + 2P.
+// E = Number of edges in control flow graph.
+// N = Number of nodes in control flow graph.
+// P = Number of connected components in graph.
+// M = 1 - 2 + 2 * 2 = 3

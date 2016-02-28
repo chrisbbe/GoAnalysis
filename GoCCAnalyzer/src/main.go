@@ -1,133 +1,150 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 	"io/ioutil"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/ccomplexity"
+	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/graph"
 	"go/token"
 	"go/parser"
-	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/graph"
 	"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/bblock"
+	"os"
+	"io"
 )
 
 func main() {
-	generateControlFlowGraph()
-	//getBasicBlocks()
-	//generateGraph()
+	//static()
+	//testGraph()
+	testing()
+	//testCC()
+	testBB()
 }
 
-func generateGraph() {
-	srcFile := "../directedgraph.txt"
-
-	file, err := os.Open(srcFile)
-	if err != nil {
-		fmt.Printf("Error opening file %s!\n", srcFile)
-		os.Exit(1)
-	}
-	defer file.Close()
-
+func testGraph() {
 	g := graph.NewGraph()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.Split(scanner.Text(), " -> ")
-		left := graph.Node{Value: line[0]}
-		right := graph.Node{Value: line[1]}
-		g.InsertEdge(&left, &right)
+	a := graph.Node{Value:"A"}
+	b := graph.Node{Value:"B"}
+	c := graph.Node{Value:"C"}
+
+	g.InsertNode(&a)
+	g.InsertNode(&b)
+	g.InsertNode(&c)
+
+	fmt.Printf("Length %d\n", len(g.Nodes))
+
+	for i, e := range g.GetDFS() {
+		fmt.Printf("%d) %v\n", i, e.Value)
+	}
+}
+
+func testCC() {
+	sourceFile, err := ioutil.ReadFile("./ccomplexity/testcode/_ifelse.go")
+	if err != nil {
+		fmt.Printf("Error:\n")
 	}
 
-	fmt.Println("### DFS Printout ###")
-	for _, node := range g.GetDFS() {
+	fmt.Printf("CC File Level: %d\n", ccomplexity.GetCyclomaticComplexityFileLevel(sourceFile))
+
+	for _, bbCC := range ccomplexity.GetCyclomaticComplexityFunctionLevel(sourceFile) {
+		fmt.Printf("- %s: CC = %d\n", bbCC.FunctionName, bbCC.GetCyclomaticComplexity())
+	}
+}
+
+func testBB() {
+	sourceFile, err := ioutil.ReadFile("./ccomplexity/testcode/_twoifelse.go")
+	if err != nil {
+		fmt.Printf("Error:\n")
+	}
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, "", sourceFile, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, bb := range bblock.GetBasicBlocksFromSourceCode(file) {
+		fmt.Printf("%s (%d)\n", bb.Type.String(), bb.Number)
+		for _, sbb := range bb.Successor {
+			fmt.Printf("\t- %s (%d)\n", sbb.Type.String(), sbb.Number)
+		}
+	}
+
+}
+
+func testing() {
+	sourceFile, err := ioutil.ReadFile("./ccomplexity/testcode/_ifelse.go")
+	if err != nil {
+		fmt.Printf("Error:\n")
+	}
+
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, "", sourceFile, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	controlFlow := graph.NewGraph()
+
+	for _, bb := range bblock.GetBasicBlocksFromSourceCode(file) {
+		controlFlow.InsertNode(&graph.Node{Value:bb})
+		for _, sbb := range bb.Successor {
+			controlFlow.InsertEdge(&graph.Node{Value:bb}, &graph.Node{Value:sbb})
+		}
+	}
+
+	dottyFile, err := os.Create("result.gv")
+	writeLineToFile("digraph AST {\n", dottyFile)
+
+	for _, node := range controlFlow.Nodes {
+		fmt.Printf("%s\n", node.Value.(*bblock.BasicBlock).Type.String())
+
+		for _, sNode := range node.GetOutNodes() {
+			fmt.Printf("\t-> %s\n", sNode.Value.(*bblock.BasicBlock).Type.String())
+			line := fmt.Sprintf("\t\"(BB #%d) %s\" -> \"(BB #%d) %s\";\n", node.Value.(*bblock.BasicBlock).Number, node.Value.(*bblock.BasicBlock).Type.String(), sNode.Value.(*bblock.BasicBlock).Number, sNode.Value.(*bblock.BasicBlock).Type.String())
+			writeLineToFile(line, dottyFile)
+		}
+		fmt.Println()
+	}
+
+	writeLineToFile("}\n", dottyFile)
+	dottyFile.Close()
+
+}
+
+func static() {
+	start := &graph.Node{Value:"START"}
+	exit := &graph.Node{Value:"EXIT"}
+	ifNode := &graph.Node{Value:"IF"}
+	elseNode := &graph.Node{Value:"ELSE"}
+
+	controlFlow := graph.NewGraph()
+
+	controlFlow.InsertEdge(start, ifNode)
+	controlFlow.InsertEdge(start, elseNode)
+	controlFlow.InsertEdge(ifNode, exit)
+	controlFlow.InsertEdge(elseNode, exit)
+
+	dottyFile, _ := os.Create("result.gv")
+	writeLineToFile("digraph AST {\n", dottyFile)
+
+	for _, node := range controlFlow.Nodes {
 		fmt.Printf("%s\n", node.Value)
-	}
-}
 
-func getBasicBlocks() {
-	srcFile := "../codeexamples/_ifelse.go"
-
-	sourceFile, err := ioutil.ReadFile(srcFile)
-	if err != nil {
-		fmt.Printf("Error finding file %s!\n", srcFile)
-		os.Exit(1)
-	}
-
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "", sourceFile, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
-
-	for _, bb := range basicBlocks {
-		fmt.Printf("################## BLOCK NR. %d (%d - %d) %s ##################\n", bb.Number, bb.FromLine, bb.ToLine, bb.Value)
-	}
-}
-
-type cfgNode struct {
-	Value      string
-	bb         *bblock.BasicBlock
-	ifTrueJmp  *bblock.BasicBlock
-	ifFalseJmp *bblock.BasicBlock
-}
-
-func generateControlFlowGraph() {
-
-	srcFile := "../codeexamples/_ifelse.go"
-
-	sourceFile, err := ioutil.ReadFile(srcFile)
-	if err != nil {
-		fmt.Printf("Error finding file %s!\n", srcFile)
-		os.Exit(1)
-	}
-
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "", sourceFile, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	basicBlocks := bblock.GetBasicBlocksFromSourceCode(fset, file)
-
-	fmt.Printf("Number of basicBlocks: %d\n", len(basicBlocks))
-	g := graph.NewGraph()
-
-	entryCfg := cfgNode{Value:fmt.Sprintf("%d) %s", 0, "Entry")}
-	entry := graph.Node{Value:entryCfg}
-
-	var prevNode *graph.Node = nil
-
-	for i, v := range basicBlocks {
-		line := fmt.Sprintf("%d) %s", i, v.Value)
-		cfgNode := cfgNode{Value:line, bb:v}
-
-		if v.Value == "If" {
-			//Hack
-			cfgNode.ifTrueJmp = basicBlocks[i + 1] //Always are If-True-jump currentBlock + 1
-			cfgNode.ifFalseJmp = basicBlocks[i + 3]
+		for _, sNode := range node.GetOutNodes() {
+			fmt.Printf("\t-> %s\n", sNode.Value)
+			line := fmt.Sprintf("\t\"%s\" -> \"%s\";\n", node.Value, sNode.Value)
+			writeLineToFile(line, dottyFile)
 		}
-
-		node := graph.Node{Value:cfgNode}
-
-		if prevNode == nil {
-			//First node after entry.
-			g.InsertEdge(&entry, &node)
-		} else {
-			g.InsertEdge(prevNode, &node)
-		}
-		prevNode = &node
+		fmt.Println()
 	}
 
-	exit := graph.Node{Value:fmt.Sprintf("%d) %s", len(basicBlocks), "Exit")}
-	g.InsertEdge(prevNode, &exit)
+	writeLineToFile("}\n", dottyFile)
+	dottyFile.Close()
+}
 
-	dfs := g.GetDFS()
-	fmt.Printf("Number of nodes in DFS %d\n", len(dfs))
-
-	for _, key := range dfs {
-		//fmt.Printf("%s\n", key)
-		fmt.Println(key)
+func writeLineToFile(line string, f io.Writer) {
+	_, err := io.WriteString(f, line)
+	if err != nil {
+		fmt.Println(err)
 	}
 }

@@ -20,20 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// CAUTION: This file in used by a unit test in file basicblock_test.go,
-// changing the structure or logic in the program will with high possibility
-// break the test and give false positive errors. Please DO NOT change this
-// file unless you know what you are doing!
-package main //BB #0 starting.
+// Package 'graph' implements a data structure to represent directed graphs by
+// node objects and unweight edges between nodes. Common graph operations
+// like dept-first-search and detection of strongly connected components are
+// provided.
+package ccomplexity
 
-import "fmt"
+import (
+"go/token"
+"go/parser"
+	"fmt"
+"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/graph"
+"github.com/chrisbbe/GoAnalysis/GoCCAnalyzer/src/bblock"
+)
 
-func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
-		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
-		fmt.Printf("False")
+// Here we must do something smart!
+
+
+func GetCyclomaticComplexityForFile(sourceFile []byte) (int) {
+	fileSet := token.NewFileSet() // positions are relative to fset
+	file, err := parser.ParseFile(fileSet, "", sourceFile, 0)
+	if err != nil {
+		fmt.Errorf("Error parsing file %v\n", err)
 	}
+
+	controlFlowGraph := graph.NewGraph()
+
+	for _, bb := range bblock.GetBasicBlocksFromSourceCode(file) {
+		for _, bbS := range bb.Successor {
+			controlFlowGraph.InsertEdge(&graph.Node{Value:bb}, &graph.Node{Value:bbS})
+		}
+
+	}
+	return 0
 }

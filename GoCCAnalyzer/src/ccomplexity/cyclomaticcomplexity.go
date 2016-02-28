@@ -20,20 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// CAUTION: This file in used by a unit test in file basicblock_test.go,
-// changing the structure or logic in the program will with high possibility
-// break the test and give false positive errors. Please DO NOT change this
-// file unless you know what you are doing!
-package main //BB #0 starting.
+// Package 'graph' implements a data structure to represent directed graphs by
+// node objects and unweight edges between nodes. Common graph operations
+// like dept-first-search and detection of strongly connected components are
+// provided.
+package ccomplexity
 
-import "fmt"
+func GetCyclomaticComplexityForFile(srcFile []byte) (int) {
 
-func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
-		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
-		fmt.Printf("False")
-	}
+	return 0
+}
+
+func GetCyclomaticComplexityPerFunctions(srcFile []byte) {
+
 }

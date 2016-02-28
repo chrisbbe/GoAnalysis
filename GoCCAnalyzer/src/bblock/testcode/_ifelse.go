@@ -30,10 +30,10 @@ import "fmt"
 
 func main() { // BB #1 starting.
 	if true { // BB #2 starting.
-		fmt.Printf("Sant")
+		fmt.Printf("True")
 		fmt.Printf("True")
 	} else { // BB #3 starting.
-		fmt.Printf("Usant")
+		fmt.Printf("False")
 		fmt.Printf("False")
 	}
 }

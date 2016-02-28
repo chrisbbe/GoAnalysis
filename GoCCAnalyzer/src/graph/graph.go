@@ -30,7 +30,7 @@ import (
 	"github.com/chrisbbe/GoAnalysis/Stack/src"
 )
 
-// Graph is the main datastructure
+// Graph is the main data-structure
 // representing the graph.
 // Holding references to the root node
 // and all nodes in the graph.
@@ -67,6 +67,15 @@ func NewGraph() *Graph {
 	return &Graph{Nodes: map[interface{}]*Node{}}
 }
 
+func (graph *Graph) InsertNode(node *Node) {
+	if graph.Root == nil {
+		graph.Root = node
+		graph.Nodes[graph.Root.Value] = graph.Root
+	} else if graph.Nodes[node.Value] == nil {
+		graph.Nodes[node.Value] = node
+	}
+}
+
 // insertOutNode inserts outgoing directed
 // edge to 'node'.
 func (n *Node) insertOutEdge(node *Node) {
@@ -84,6 +93,7 @@ func (n *Node) insertInEdge(node *Node) {
 // the node in the graph correctly if the
 // node does not already exist in the graph.
 func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
+	//TODO: This if statement can be refactored more beautiful!
 	if len(graph.Nodes) == 0 {
 		graph.Root = leftNode
 		graph.Root.insertOutEdge(rightNode)
@@ -232,3 +242,10 @@ func (node *Node) GetOutDegree() int {
 	return len(node.outEdges)
 }
 
+func (node *Node) GetOutNodes() ([]*Node) {
+	return node.outEdges
+}
+
+func (node *Node) GetInNodes() ([]*Node) {
+	return node.inEdges
+}

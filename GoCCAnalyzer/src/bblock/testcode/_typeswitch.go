@@ -29,11 +29,20 @@ package main //BB #0 starting.
 import "fmt"
 
 func main() { // BB #1 starting.
-	if true { // BB #2 starting.
-		fmt.Printf("Sant")
-		fmt.Printf("True")
-	} else { // BB #3 starting.
-		fmt.Printf("Usant")
-		fmt.Printf("False")
+	var x interface{}
+	x = true
+
+	switch t := x.(type) { // BB #2 starting.
+
+	case nil: // BB #3 starting.
+		fmt.Println("Type is nil")
+	case int: // BB #4 starting.
+		fmt.Println("Type is int")
+	case bool: // BB #5 starting.
+		fmt.Println("Type is bool")
+	case string: // BB #6 starting.
+		fmt.Println("Type is string")
+	default: // BB #7 starting.
+		fmt.Printf("Type %t is unknown\n", t)
 	}
 }

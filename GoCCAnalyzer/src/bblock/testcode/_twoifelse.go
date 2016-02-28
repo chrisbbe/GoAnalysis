@@ -36,4 +36,14 @@ func main() { // BB #1 starting.
 		fmt.Printf("Usant")
 		fmt.Printf("False")
 	}
+
+	fmt.Println("In the middle")
+
+	if true { // BB #4 starting.
+		fmt.Printf("Sant")
+		fmt.Printf("True")
+	} else { // BB #5 starting.
+		fmt.Printf("Usant")
+		fmt.Printf("False")
+	}
 }

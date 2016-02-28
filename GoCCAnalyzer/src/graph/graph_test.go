@@ -243,6 +243,60 @@ func TestStronglyConnectedComponentsInGraph(t *testing.T) {
 	}
 }
 
+func TestStronglyConnectedComponentsInGraph2(t *testing.T) {
+	graph := NewGraph()
+
+	a := &Node{Value: "A"}
+	b := &Node{Value: "B"}
+	c := &Node{Value: "C"}
+	d := &Node{Value: "D"}
+	e := &Node{Value: "E"}
+	f := &Node{Value: "F"}
+	g := &Node{Value: "G"}
+	h := &Node{Value: "H"}
+
+	graph.InsertEdge(a, b)
+	graph.InsertEdge(a, f)
+
+	graph.InsertEdge(b, f)
+	graph.InsertEdge(b, c)
+
+	graph.InsertEdge(c, d)
+	graph.InsertEdge(c, g)
+
+	graph.InsertEdge(e, a)
+
+	graph.InsertEdge(f, e)
+	graph.InsertEdge(f, g)
+
+	graph.InsertEdge(g, c)
+
+	graph.InsertEdge(h, g)
+
+	expectedStronglyConnectedComponents := graph.GetSCComponents()
+	actualStronglyConnectedComponents := []StronglyConnectedComponent{
+		StronglyConnectedComponent{Nodes: []*Node{&Node{Value: "D"}}},
+		StronglyConnectedComponent{Nodes: []*Node{&Node{Value: "C"}, &Node{Value: "G"}}},
+		StronglyConnectedComponent{Nodes: []*Node{&Node{Value: "A"}, &Node{Value: "B"}, &Node{Value: "E"}, &Node{Value: "F"}}},
+		StronglyConnectedComponent{Nodes: []*Node{&Node{Value: "H"}}},
+	}
+
+	if len(expectedStronglyConnectedComponents) != len(actualStronglyConnectedComponents) {
+		t.Fatalf("Number of strongly connected components should be %d, but are %d!\n", len(actualStronglyConnectedComponents),
+			len(expectedStronglyConnectedComponents))
+	}
+
+	for i, e := range actualStronglyConnectedComponents {
+		for _, f := range e.Nodes {
+			//TODO
+			//Hver eneste variabel i i
+			if !containsNodeValue(f.Value, expectedStronglyConnectedComponents[i].Nodes) {
+				t.Fatalf("Strongly connected component nr. %d should contain value %v!\n", i, f.Value)
+			}
+		}
+	}
+}
+
 //Helper function to test if a list of Nodes contains a value.
 func containsNodeValue(value interface{}, nodes []*Node) bool {
 	for _, v := range nodes {
@@ -252,4 +306,3 @@ func containsNodeValue(value interface{}, nodes []*Node) bool {
 	}
 	return false
 }
-
