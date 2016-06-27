@@ -8,7 +8,7 @@ import (
 	"flag"
 	"os"
 	"log"
-	"github.com/chrisbbe/GoAnalysis/analysis/linter"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter"
 	"path/filepath"
 	"strings"
 	"path"

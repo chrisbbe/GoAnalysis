@@ -23,9 +23,9 @@ package cfgraph_test
 
 import (
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/bblock"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/cfgraph"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/graph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/cfgraph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
 	"io/ioutil"
 	"testing"
 )

@@ -24,7 +24,7 @@ package graph_test
 
 import (
 	"testing"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/graph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
 )
 
 // Letter is the type to store in the ccomplexity.graph.

@@ -26,8 +26,8 @@
 package ccomplexity
 
 import (
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/bblock"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/cfgraph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/cfgraph"
 )
 
 // FunctionComplexity represents cyclomatic complexity in a function or method.

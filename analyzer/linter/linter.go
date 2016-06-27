@@ -6,8 +6,8 @@ package linter
 
 import (
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analysis/linter/astutil"
-	"github.com/chrisbbe/GoAnalysis/analysis/linter/racer"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/astutil"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/racer"
 	"go/ast"
 	"go/parser"
 	"go/token"

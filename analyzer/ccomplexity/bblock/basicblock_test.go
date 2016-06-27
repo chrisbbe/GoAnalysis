@@ -26,7 +26,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
 )
 
 // VerifyBasicBlocks checks the list of expected basic-blocks with the list of actual basic-blocks.

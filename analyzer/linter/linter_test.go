@@ -23,7 +23,7 @@ package linter_test
 
 import (
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analysis/linter"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter"
 	"testing"
 )
 

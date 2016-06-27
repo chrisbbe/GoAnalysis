@@ -28,11 +28,11 @@ package graph
 
 import (
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analysis/ccomplexity/graph/stack"
+	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph/stack"
 	"io"
 	"os"
 	"os/exec"
-	"github.com/chrisbbe/GoAnalysis/analysis/globalvars"
+	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
 	"bytes"
 	"time"
 )
