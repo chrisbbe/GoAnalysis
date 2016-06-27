@@ -69,7 +69,7 @@ func verifyBasicBlocks(expectedBasicBlocks []*bblock.BasicBlock, correctBasicBlo
 }
 
 func TestEmptyFunctionBasicBlock(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_emptyFunction.go")
+	sourceFile, err := ioutil.ReadFile("./testcode/_emptyfunction.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +207,7 @@ func TestLooperBasicBlock(t *testing.T) {
 }
 
 func TestSimpleSwitchBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_simpleSwitch.go")
+	srcFile, err := ioutil.ReadFile("./testcode/_simpleswitch.go")
 	if err != nil {
 		t.Fatal(err)
 	}
