@@ -1,12 +1,9 @@
-//This little piece of code is used to demonstrate
-//one of the common mistakes done i Go, namely to
-//use goroutines on loop-iterator variables.
-//
-//Author: Christian Bergum Bergersen (chrisbbe@ifi.uio.no)
+// Copyright (c) 2015-2016 The GoAnalysis Authors. All rights reserved.
+// Use of this source code is governed by the MIT license found in the
+// LICENSE file.
 package main
 
 import (
-	"fmt"
 	"log"
 )
 

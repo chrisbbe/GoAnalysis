@@ -9,11 +9,19 @@ import (
 )
 
 func main() {
-	randomInt := rand.Intn(100)
 
-	if randomInt == 50 {
-		log.Print("50")
+	if 1 == rand.Intn(10) {
+		return
 	} else {
-
+		log.Println("Lucky")
 	}
+}
+
+func foo(e interface{}) interface{} {
+	if e == nil {
+		return nil
+	} else if e != nil {
+		return e
+	}
+	return nil
 }

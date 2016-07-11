@@ -1,17 +1,17 @@
-// Copyright (c) 2015-2016 The GoAnalysis Authors. All rights reserved.
-// Use of this source code is governed by the MIT license found in the
-// LICENSE file.
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package main
 
 import "fmt"
 
-func main() {
+func main() { // 0.
 	month := 10
 	fmt.Printf("Month %d is %s\n", month, monthNumberToString(month))
-}
+} // 1.
 
-func monthNumberToString(month int) string {
-	switch month {
+func monthNumberToString(month int) string { // 2
+	switch month { // 3
 	case 1:
 		return "January"
 	case 2:
@@ -36,7 +36,5 @@ func monthNumberToString(month int) string {
 		return "November"
 	case 12:
 		return "Desember"
-	default:
-		return "Invalid month"
 	}
 }

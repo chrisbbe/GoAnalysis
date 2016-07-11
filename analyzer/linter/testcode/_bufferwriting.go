@@ -4,16 +4,17 @@
 package main
 
 import (
-	"log"
-	"math/rand"
+	"bufio"
+	"fmt"
+	"os"
 )
 
 func main() {
-	randomInt := rand.Intn(100)
+	w := bufio.NewWriter(os.Stdout)
+	fmt.Fprint(w, "Hello, World")
+	closeBuffer(w)
+}
 
-	if randomInt == 50 {
-		log.Print("50")
-	} else {
-
-	}
+func closeBuffer(buf *bufio.Writer) {
+	buf.Flush()
 }

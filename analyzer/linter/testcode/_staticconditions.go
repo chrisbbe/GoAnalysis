@@ -1,38 +1,55 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// Copyright (c) 2015-2016 The GoAnalysis Authors. All rights reserved.
+// Use of this source code is governed by the MIT license found in the
+// LICENSE file.
 package main
 
-import "log"
+import (
+	"bytes"
+	"log"
+	"math/rand"
+)
 
 func main() {
 	if true {
-		log.Printf("Always true")
+		log.Println("Always true")
+	}
+
+	if false {
+		log.Println("Should never be printed")
 	}
 
 	if 1 >= 2 {
-		log.Printf("Not possible")
+		log.Println("Not possible")
 	}
 
-	if 2 >= 1 && 1 >= 0 || 0 >= 1 {
-		log.Printf("Possible")
+	if 2 >= 1 && 1 >= 0 || 0 >= 0 {
+		log.Println("Possible")
 	}
+
+	aString := "a"
+	bString := "b"
+
+	if aString == bString {
+		log.Println("This should never be printed")
+	}
+
+	var buf bytes.Buffer
+
+	if buf.Bytes() == nil {
+		log.Println("This is alway false")
+	} else if true {
+		log.Println("Might be printed")
+	}
+
+	if 1 == rand.Intn(10) {
+		log.Println("Result is 1")
+	}
+
+}
+
+func GetBiggest(a, b float32) float32 {
+	if a > b {
+		return a
+	}
+	return b
 }
