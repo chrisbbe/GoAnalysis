@@ -11,8 +11,8 @@ func main() {
 }
 
 // Cyclomatic Complexity M = E - N + 2P.
-// E = Number of edges in control flow ccomplexity.graph.
-// N = Number of nodes in control flow ccomplexity.graph.
-// P = Number of connected components in ccomplexity.graph.
+// E = Number of edges in control flow graph.
+// N = Number of nodes in control flow graph.
+// P = Number of connected components in graph.
 // 		 File level: 	M = 1 - 2 + 2 * 2 = 3
 // Function level: 	M = 0 - 1 + 2 * 1 = 1

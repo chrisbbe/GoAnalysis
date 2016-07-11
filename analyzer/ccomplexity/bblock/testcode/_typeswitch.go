@@ -13,16 +13,16 @@ func main() {
 
 	switch x.(type) { // BB #1 ending.
 
-	case nil: // BB #2 ending.
-		dataType = "nil"
-	case int: // BB #3 ending.
-		dataType = "int"
-	case bool: // BB #4 ending.
-		dataType = "bool"
-	case string: // BB #5 ending.
-		dataType = "string"
-	default: // BB #6 ending.
-		dataType = "unknown"
+	case nil:
+		dataType = "nil" // BB #2 ending.
+	case int:
+		dataType = "int" // BB #3 ending.
+	case bool:
+		dataType = "bool" // BB #4 ending.
+	case string:
+		dataType = "string" // BB #5 ending.
+	default:
+		dataType = "unknown" // BB #6 ending.
 	}
-	fmt.Printf("Type is: %s\n", dataType) // BB #8 ending.
-}
+	fmt.Printf("Type is: %s\n", dataType)
+} // BB #8 ending.

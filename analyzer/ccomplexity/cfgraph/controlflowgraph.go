@@ -1,15 +1,18 @@
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package cfgraph
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
 	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
 	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
 	"io"
 	"os"
-	"time"
-	"bytes"
 	"os/exec"
+	"time"
 )
 
 type ControlFlowGraph struct {
@@ -49,11 +52,11 @@ func (controlFlowGraph ControlFlowGraph) Draw(name string) error {
 	if _, err := io.WriteString(dottyFile, content.String()); err != nil {
 		return err
 	}
-	cmd := exec.Command("dot", "-Tpdf", dottyFile.Name(), "-o", name + ".pdf")
+	cmd := exec.Command("dot", "-Tpdf", dottyFile.Name(), "-o", name+".pdf")
 	return cmd.Run()
 }
 
-// GetControlFlowGraph generates the control flow ccomplexity.graph for each function or
+// GetControlFlowGraph generates the control flow graph for each function or
 // method found in the sequence of basic-blocks. Returning an array of control
 // flow graphs where each entry represents an function or method.
 func GetControlFlowGraph(basicBlocks []*bblock.BasicBlock) (cfg []*ControlFlowGraph) {
@@ -72,7 +75,7 @@ func GetControlFlowGraph(basicBlocks []*bblock.BasicBlock) (cfg []*ControlFlowGr
 	return cfg
 }
 
-// getControlFlowGraph generates and returns the control-flow ccomplexity.graph based on the array of basic blocks.
+// getControlFlowGraph generates and returns the control-flow graph based on the array of basic blocks.
 func getControlFlowGraph(basicBlocks []*bblock.BasicBlock) *ControlFlowGraph {
 	//controlFlowGraph := graph.NewGraph()
 	//var controlFlowGraph ControlFlowGraph
@@ -90,8 +93,10 @@ func getControlFlowGraph(basicBlocks []*bblock.BasicBlock) *ControlFlowGraph {
 
 	startNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.START, 0)}
 	exitNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.EXIT, 0)}
+
 	controlFlowGraph.InsertEdge(startNode, controlFlowGraph.Root)
 	controlFlowGraph.InsertEdge(&graph.Node{Value: lastBlockAdded}, exitNode)
+	controlFlowGraph.InsertEdge(exitNode, startNode)
 
 	return controlFlowGraph
 }

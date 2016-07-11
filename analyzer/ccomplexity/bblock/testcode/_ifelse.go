@@ -13,4 +13,4 @@ func main() { // BB #0 ending.
 		w := 10 + 3
 		v := w - 4
 	} // BB #3 ending.
-}
+} // BB #4 ending.

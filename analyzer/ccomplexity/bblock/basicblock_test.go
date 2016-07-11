@@ -1,24 +1,6 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package bblock_test
 
 import (
@@ -78,8 +60,8 @@ func TestEmptyFunctionBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 29)
-	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 31)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
+	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 8)
 
 	BB0.AddSuccessorBlock(BB1)
 
@@ -100,8 +82,8 @@ func TestSingleBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 33)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 11)
 
 	BB0.AddSuccessorBlock(BB1)
 
@@ -122,11 +104,11 @@ func TestIfElseBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 29)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 33)
-	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 35)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 38)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 39)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 10)
+	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 12)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 15)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 16)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -152,14 +134,14 @@ func TestNestedIfElseBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 5)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 7)
-	BB2 := bblock.NewBasicBlock(2, bblock.IF_CONDITION, 10)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_CONDITION, 12)
-	BB4 := bblock.NewBasicBlock(4, bblock.ELSE_BODY, 14)
-	BB5 := bblock.NewBasicBlock(5, bblock.ELSE_CONDITION, 15)
-	BB6 := bblock.NewBasicBlock(6, bblock.ELSE_BODY, 17)
-	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 20)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 11)
+	BB2 := bblock.NewBasicBlock(2, bblock.IF_CONDITION, 15)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_CONDITION, 18)
+	BB4 := bblock.NewBasicBlock(4, bblock.ELSE_BODY, 21)
+	BB5 := bblock.NewBasicBlock(5, bblock.ELSE_CONDITION, 22)
+	BB6 := bblock.NewBasicBlock(6, bblock.ELSE_BODY, 25)
+	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 28)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB6)
@@ -188,10 +170,10 @@ func TestLooperBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 3)
-	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 5)
-	BB2 := bblock.NewBasicBlock(2, bblock.FOR_BODY, 7)
-	BB3 := bblock.NewBasicBlock(3, bblock.RETURN_STMT, 9)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 11)
+	BB2 := bblock.NewBasicBlock(2, bblock.FOR_BODY, 14)
+	BB3 := bblock.NewBasicBlock(3, bblock.RETURN_STMT, 16)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -216,13 +198,13 @@ func TestSimpleSwitchBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 35)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 38)
-	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 40)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 42)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 44)
-	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 46)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 12)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 15)
+	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 17)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 19)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 21)
+	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 23)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3, BB4, BB5, BB6)
@@ -250,15 +232,15 @@ func TestSwitchBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 34)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 37)
-	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 40)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 42)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 44)
-	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 47)
-	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 49)
-	BB8 := bblock.NewBasicBlock(8, bblock.RETURN_STMT, 51)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 12)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 15)
+	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 18)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 20)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 22)
+	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 25)
+	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 27)
+	BB8 := bblock.NewBasicBlock(8, bblock.RETURN_STMT, 29)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3, BB4, BB5, BB6, BB7, BB8)
@@ -278,7 +260,7 @@ func TestSwitchBasicBlock(t *testing.T) {
 }
 
 func TestReturnSwitcherBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_returnSwitcher.go")
+	srcFile, err := ioutil.ReadFile("./testcode/_returnswitcher.go")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,23 +269,23 @@ func TestReturnSwitcherBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 34)
-	BB2 := bblock.NewBasicBlock(2, bblock.FUNCTION_ENTRY, 36)
-	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 37)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 39)
-	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 41)
-	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 43)
-	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 45)
-	BB8 := bblock.NewBasicBlock(8, bblock.RETURN_STMT, 47)
-	BB9 := bblock.NewBasicBlock(9, bblock.RETURN_STMT, 49)
-	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 51)
-	BB11 := bblock.NewBasicBlock(11, bblock.RETURN_STMT, 53)
-	BB12 := bblock.NewBasicBlock(12, bblock.RETURN_STMT, 55)
-	BB13 := bblock.NewBasicBlock(13, bblock.RETURN_STMT, 57)
-	BB14 := bblock.NewBasicBlock(14, bblock.RETURN_STMT, 59)
-	BB15 := bblock.NewBasicBlock(15, bblock.RETURN_STMT, 61)
-	BB16 := bblock.NewBasicBlock(16, bblock.RETURN_STMT, 63)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 11)
+	BB2 := bblock.NewBasicBlock(2, bblock.FUNCTION_ENTRY, 13)
+	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 14)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 16)
+	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 18)
+	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 20)
+	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 22)
+	BB8 := bblock.NewBasicBlock(8, bblock.RETURN_STMT, 24)
+	BB9 := bblock.NewBasicBlock(9, bblock.RETURN_STMT, 26)
+	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 28)
+	BB11 := bblock.NewBasicBlock(11, bblock.RETURN_STMT, 30)
+	BB12 := bblock.NewBasicBlock(12, bblock.RETURN_STMT, 32)
+	BB13 := bblock.NewBasicBlock(13, bblock.RETURN_STMT, 34)
+	BB14 := bblock.NewBasicBlock(14, bblock.RETURN_STMT, 36)
+	BB15 := bblock.NewBasicBlock(15, bblock.RETURN_STMT, 38)
+	BB16 := bblock.NewBasicBlock(16, bblock.RETURN_STMT, 40)
 
 	// Function main.
 	BB0.AddSuccessorBlock(BB1)
@@ -331,17 +313,17 @@ func TestNestedSwitchBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 33)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 37)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 40)
-	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 43)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 46)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 48)
-	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 50)
-	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 53)
-	BB8 := bblock.NewBasicBlock(8, bblock.CASE_CLAUSE, 55)
-	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 57)
-	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 59)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 10)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 14)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 17)
+	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 20)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 23)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 25)
+	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 27)
+	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 30)
+	BB8 := bblock.NewBasicBlock(8, bblock.CASE_CLAUSE, 32)
+	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 34)
+	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 36)
 
 	correctBasicBlocks := []*bblock.BasicBlock{
 		BB0, BB1, BB2, BB3, BB4, BB5, BB6, BB7, BB8, BB9, BB10,
@@ -373,14 +355,14 @@ func TestTypeSwitchBasicBlock(t *testing.T) {
 		t.Error(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 36)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 39)
-	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 41)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 43)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 45)
-	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 47)
-	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 50)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 14)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 17)
+	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 19)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 21)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 23)
+	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 25)
+	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 28)
 
 	BB0.AddSuccessorBlock(BB1)
 
@@ -415,12 +397,12 @@ func TestSimpleLooperSwitch(t *testing.T) {
 		t.Error(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 5)
-	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 7)
-	BB2 := bblock.NewBasicBlock(2, bblock.SWITCH_STATEMENT, 8)
-	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 10)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 12)
-	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 15)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 11)
+	BB2 := bblock.NewBasicBlock(2, bblock.SWITCH_STATEMENT, 13)
+	BB3 := bblock.NewBasicBlock(3, bblock.CASE_CLAUSE, 15)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 17)
+	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 20)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB5)
@@ -447,13 +429,13 @@ func TestSelectBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 35)
-	BB1 := bblock.NewBasicBlock(1, bblock.GO_STATEMENT, 38)
-	BB2 := bblock.NewBasicBlock(2, bblock.FOR_STATEMENT, 45)
-	BB3 := bblock.NewBasicBlock(3, bblock.SELECT_STATEMENT, 46)
-	BB4 := bblock.NewBasicBlock(4, bblock.COMM_CLAUSE, 48)
-	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 51)
-	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 54)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 12)
+	BB1 := bblock.NewBasicBlock(1, bblock.GO_STATEMENT, 16)
+	BB2 := bblock.NewBasicBlock(2, bblock.FOR_STATEMENT, 24)
+	BB3 := bblock.NewBasicBlock(3, bblock.SELECT_STATEMENT, 26)
+	BB4 := bblock.NewBasicBlock(4, bblock.COMM_CLAUSE, 28)
+	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 31)
+	BB6 := bblock.NewBasicBlock(6, bblock.RETURN_STMT, 34)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2)
@@ -480,12 +462,12 @@ func TestGreatestCommonDivisor(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 31)
-	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 34)
-	BB2 := bblock.NewBasicBlock(2, bblock.FUNCTION_ENTRY, 36)
-	BB3 := bblock.NewBasicBlock(3, bblock.FOR_STATEMENT, 37)
-	BB4 := bblock.NewBasicBlock(4, bblock.FOR_BODY, 39)
-	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 40)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 12)
+	BB2 := bblock.NewBasicBlock(2, bblock.FUNCTION_ENTRY, 14)
+	BB3 := bblock.NewBasicBlock(3, bblock.FOR_STATEMENT, 16)
+	BB4 := bblock.NewBasicBlock(4, bblock.FOR_BODY, 19)
+	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 20)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB2.AddSuccessorBlock(BB3)

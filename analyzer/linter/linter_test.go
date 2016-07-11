@@ -1,24 +1,6 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package linter_test
 
 import (
@@ -32,7 +14,7 @@ type actualViolation struct {
 	Type    linter.Rule
 }
 
-// verifyViolations checks the list of expected mistakes with the list of actual mistakes.
+// verifyViolations checks the list of expected Violations with the list of actual Violations.
 // Errors found is reported and logged through t.
 func verifyViolations(expectedViolations []*linter.Violation, actualViolations []actualViolation) error {
 	if len(expectedViolations) != len(actualViolations) {
@@ -53,35 +35,18 @@ func verifyViolations(expectedViolations []*linter.Violation, actualViolations [
 // Printing from fmt package is not thread safe and should be avoided in production and detected!
 // Testing rule: FMT_PRINTING
 func TestDetectionOfPrintingFromFmtPackage(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_fmtprinting.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/_fmtprinting.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 27, Type: linter.FMT_PRINTING},
-		actualViolation{SrcLine: 28, Type: linter.FMT_PRINTING},
-		actualViolation{SrcLine: 29, Type: linter.FMT_PRINTING},
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 10, Type: linter.FMT_PRINTING},
+		actualViolation{SrcLine: 11, Type: linter.FMT_PRINTING},
+		actualViolation{SrcLine: 12, Type: linter.FMT_PRINTING},
 	}
 
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// TODO
-// Testing rule: STRING_DEFINES_ITSELF
-func TestDetectionOfFmtPrintingInStringMethod(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_stringMethod.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	correctMistakes := []actualViolation{
-		actualViolation{SrcLine: 40, Type: linter.STRING_DEFINES_ITSELF},
-	}
-
-	if err := verifyViolations(expectedMistakes, correctMistakes); err != nil {
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -89,29 +54,167 @@ func TestDetectionOfFmtPrintingInStringMethod(t *testing.T) {
 // Testing rule: NEVER_ALLOCATED_MAP_WITH_NEW
 // Allocating maps with new returns a nil pointer, therefor one should use make.
 func TestDetectionOfAllocatingMapWithNew(t *testing.T) {
-	expectedMistakes, _ := linter.DetectViolations("./testcode/_newmap.go")
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 25, Type: linter.NEVER_ALLOCATED_MAP_WITH_NEW},
+	expectedViolations, _ := linter.DetectViolations("./testcode/_newmap.go")
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 11, Type: linter.MAP_ALLOCATED_WITH_NEW},
 	}
 
-	if len(expectedMistakes) != len(actualMistakes) {
-		t.Fatalf("Number of mistakes should be %d, not %d!\n", len(actualMistakes), len(expectedMistakes))
+	if len(expectedViolations) != len(actualViolations) {
+		t.Fatalf("Number of Violations should be %d, not %d!\n", len(actualViolations), len(expectedViolations))
 	}
 
-	for index, expectedMistake := range expectedMistakes {
-		if actualMistakes[index].Type != expectedMistake.Type {
-			t.Errorf("Error should be of type %s, and not type %s!\n", actualMistakes[index].Type, expectedMistake.Type)
+	for index, expectedMistake := range expectedViolations {
+		if actualViolations[index].Type != expectedMistake.Type {
+			t.Errorf("Error should be of type %s, and not type %s!\n", actualViolations[index].Type, expectedMistake.Type)
 		}
-		if actualMistakes[index].SrcLine != expectedMistake.SrcLine {
-			t.Errorf("Error should be found on line %d, and not on line %d!\n", actualMistakes[index].SrcLine, expectedMistake.SrcLine)
+		if actualViolations[index].SrcLine != expectedMistake.SrcLine {
+			t.Errorf("Error should be found on line %d, and not on line %d!\n", actualViolations[index].SrcLine, expectedMistake.SrcLine)
 		}
 	}
 
 }
 
-/*
-// TODO: Fix this check!
+// Testing rule: RACE_CONDITION
+// Races will occur, since multiple Go-routines will share the same counter variable.
+func TestDetectionOfRacesInLoopClosures(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_threadlooping.go")
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 18, Type: linter.RACE_CONDITION},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: EMPTY_IF_BODY
+// Empty if-bodies are unnecessary and ineffective.
+func TestDetectionOfEmptyIfBody(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_emptyifbody.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 11, Type: linter.EMPTY_IF_BODY},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: EMPTY_ELSE_BODY
+// Empty else-bodies are unnecessary and ineffective.
+func TestDetectionOfEmptyElseBody(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_emptyelsebody.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 16, Type: linter.EMPTY_ELSE_BODY},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: EMPTY_FOR_BODY
+// Empty for-bodies are unnecessary and ineffective.
+func TestDetectionOfEmptyForBody(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_emptyforbody.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 8, Type: linter.EMPTY_FOR_BODY},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: EARLY_RETURN
+// One should never return unconditionally, except from the last statement in a func or method.
+func TestDetectionOfEarlyReturn(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_earlyreturn.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 13, Type: linter.EARLY_RETURN},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: NO_ELSE_RETURN
+// When an If block contains a return statement, the Else block becoms unnecessary.
+func TestDetectionOfReturnBeforeElse(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_elsereturn.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 14, Type: linter.NO_ELSE_RETURN},
+		actualViolation{SrcLine: 22, Type: linter.NO_ELSE_RETURN},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: GOTO_USED
+// Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
+// is considered confusing and harmful.
+func TestDetectionOfGoTo(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_goto.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 12, Type: linter.GOTO_USED},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Testing rule: GOTO_USED
+// Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
+// is considered confusing and harmful.
+func TestDetectionOfLabeledBranching(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_labeledbranch.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 15, Type: linter.GOTO_USED},
+	}
+
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TODO: Implement a solution for this unit tests.
+/*
 // Testing rule: ERROR_IGNORED
 // Errors should never be ignored.
 func TestDetectionOfIgnoredErrors(t *testing.T) {
@@ -121,139 +224,61 @@ func TestDetectionOfIgnoredErrors(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 33, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 38, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 43, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 16, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 17, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 22, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 27, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 30, Type: linter.ERROR_IGNORED},
+		actualViolation{SrcLine: 46, Type: linter.ERROR_IGNORED},
 	}
 
 	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
-*/
 
-// Testing rule: RACE_CONDITION
-// Races will occur, since multiple Go-routines will share the same counter variable.
-func TestDetectionOfRacesInLoopClosures(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_threadLooping.go")
+// Testing rule: STRING_METHOD_DEFINES_ITSELF
+func TestDetectionOfStringMethodDefiningItself(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_stringmethod.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 21, Type: linter.RACE_CONDITION},
+	for _, vio := range expectedViolations {
+		log.Printf("- %s\n", vio)
 	}
 
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
+	correctViolations := []actualViolation{
+		actualViolation{SrcLine: 48, Type: linter.STRING_DEFINES_ITSELF},
+		actualViolation{SrcLine: 58, Type: linter.STRING_DEFINES_ITSELF},
+		actualViolation{SrcLine: 63, Type: linter.STRING_DEFINES_ITSELF},
+		actualViolation{SrcLine: 69, Type: linter.STRING_DEFINES_ITSELF},
+	}
+
+	if err := verifyViolations(expectedViolations, correctViolations); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// Testing rule: EMPTY_IF_BODY
-// Empty if-bodies are unnecessary and ineffective.
-func TestDetectionOfEmptyIfBody(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_emptyifbody.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 27, Type: linter.EMPTY_IF_BODY},
-	}
-
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// Testing rule: EMPTY_ELSE_BODY
-// Empty else-bodies are unnecessary and ineffective.
-func TestDetectionOfEmptyElseBody(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_emptyelsebody.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 31, Type: linter.EMPTY_ELSE_BODY},
-	}
-
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// Testing rule: EMPTY_FOR_BODY
-// Empty for-bodies are unnecessary and ineffective.
-func TestDetectionOfEmptyForBody(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_emptyforbody.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 26, Type: linter.EMPTY_FOR_BODY},
-	}
-
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// Testing rule: GOTO_USED
-// Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
-// is considered confusing and harmful.
-func TestDetectionOfGoTo(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_goto.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 30, Type: linter.GOTO_USED},
-	}
-
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// Testing rule: GOTO_USED
-// Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
-// is considered confusing and harmful.
-func TestDetectionOfLabeledBranching(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_labeledbranch.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 33, Type: linter.GOTO_USED},
-	}
-
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
-		t.Fatal(err)
-	}
-}
-
-/*
-
-// TODO: Implement checks for this two rules!
 // Testing rule: CONDITION_EVALUATED_STATICALLY
 // Condition that can be evaluated statically are wasted and performance-reducing.
 func TestDetectionOfConditionEvaluatedStatically(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_staticconditions.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/_staticconditions.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 27, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 31, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 35, Type: linter.CONDITION_EVALUATED_STATICALLY},
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 14, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 18, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 22, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 26, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 33, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 39, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		actualViolation{SrcLine: 40, Type: linter.CONDITION_EVALUATED_STATICALLY},
 	}
 
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -261,16 +286,16 @@ func TestDetectionOfConditionEvaluatedStatically(t *testing.T) {
 // Testing rule: NO_BUFFERED_FLUSHING
 // Always flush the buffer when terminating, else the last output will not written.
 func TestDetectionOfNotFlushingBufferedWriter(t *testing.T) {
-	expectedMistakes, err := linter.DetectViolations("./testcode/_bufwriting.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/_bufferwriting.go")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualMistakes := []actualViolation{
-		actualViolation{SrcLine: 31, Type: linter.CONDITION_EVALUATED_STATICALLY},
+	actualViolations := []actualViolation{
+		actualViolation{SrcLine: 14, Type: linter.BUFFER_NOT_FLUSHED},
 	}
 
-	if err := verifyViolations(expectedMistakes, actualMistakes); err != nil {
+	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }

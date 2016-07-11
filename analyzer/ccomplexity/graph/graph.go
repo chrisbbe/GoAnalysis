@@ -1,59 +1,36 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-// Package 'ccomplexity.graph' implements a data structure to represent directed graphs by
-// node objects and unweighted edges between nodes. Common ccomplexity.graph operations
-// like dept-first-search and detection of strongly connected components are
-// provided.
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package graph
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph/stack"
+	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
 	"io"
 	"os"
 	"os/exec"
-	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
-	"bytes"
 	"time"
 )
 
-// All node-values in a ccomplexity.graph implements the Value interface.
+// All node-values in a graph implements the Value interface.
 type Value interface {
 	UID() string
 	String() string
 }
 
-// Graph is the main data-structure representing the ccomplexity.graph.
-// Holding references to the root node and all nodes in the ccomplexity.graph.
+// Graph is the main data-structure representing the graph.
+// Holding references to the root node and all nodes in the graph.
 type Graph struct {
-	Root     *Node                         //First node added to the ccomplexity.graph.
-	Nodes    map[string]*Node              //All nodes in the ccomplexity.graph.
+	Root     *Node                         //First node added to the graph.
+	Nodes    map[string]*Node              //All nodes in the graph.
 	scc      []*StronglyConnectedComponent //Holds strongly-connected components sets.
 	preCount int                           // Used by SCC.
 	stack    stack.Stack                   // Used by SCC.
 }
 
-// Node represents a single node in the ccomplexity.graph, holding the node value.
+// Node represents a single node in the graph, holding the node value.
 type Node struct {
 	Value            //Holds node interface value.
 	visited  bool    //Used by DFS.
@@ -67,7 +44,7 @@ type StronglyConnectedComponent struct {
 	Nodes []*Node
 }
 
-// NewGraph initialize and returns a pointer to a new ccomplexity.graph object.
+// NewGraph initialize and returns a pointer to a new graph object.
 func NewGraph() *Graph {
 	return &Graph{Nodes: map[string]*Node{}}
 }
@@ -98,8 +75,8 @@ func (n *Node) String() string {
 
 // InsertEdge inserts directed edge between
 // leftNode and rightNode. It also inserts
-// the node in the ccomplexity.graph correctly if the
-// node does not already exist in the ccomplexity.graph.
+// the node in the graph correctly if the
+// node does not already exist in the graph.
 func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
 	if len(graph.Nodes) == 0 {
 		graph.Root = leftNode
@@ -129,7 +106,7 @@ func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
 	}
 }
 
-// getDFS is an internal helper method for GetDFS() to perform depth-first-search on the ccomplexity.graph.
+// getDFS is an internal helper method for GetDFS() to perform depth-first-search on the graph.
 func (node *Node) getDFS() (nodes []*Node) {
 	if !node.visited {
 		nodes = append(nodes, node)
@@ -143,7 +120,7 @@ func (node *Node) getDFS() (nodes []*Node) {
 	return nodes
 }
 
-// GetDFS performs depth first search in the 'ccomplexity.graph' and returns the result in 'nodes'.
+// GetDFS performs depth first search in the 'graph' and returns the result in 'nodes'.
 func (graph *Graph) GetDFS() (nodes []*Node) {
 	nodes = graph.Root.getDFS()
 	//Clean up nodes by setting visited = false
@@ -187,7 +164,7 @@ func (graph *Graph) dfs(v *Node) {
 }
 
 // GetSCComponents performs Tarjans algorithm to detect
-// strongly connected components in 'ccomplexity.graph', returns
+// strongly connected components in 'graph', returns
 // a list of lists containing nodes in each strongly
 // connected component.
 func (graph *Graph) GetSCComponents() []*StronglyConnectedComponent {
@@ -203,20 +180,20 @@ func (graph *Graph) GetSCComponents() []*StronglyConnectedComponent {
 		node.low = 0
 	}
 
-	//Clean up ccomplexity.graph.
+	//Clean up graph.
 	graph.stack = stack.Stack{}
 	graph.preCount = 0
 	return graph.scc
 }
 
 // GetNumberOfNodes returns number of
-// nodes in 'ccomplexity.graph'.
+// nodes in 'graph'.
 func (graph *Graph) GetNumberOfNodes() int {
 	return len(graph.Nodes)
 }
 
 // GetNumberOfEdges returns number of
-// edges in 'ccomplexity.graph'.
+// edges in 'graph'.
 func (graph *Graph) GetNumberOfEdges() (numberOfEdges int) {
 	for _, node := range graph.Nodes {
 		numberOfEdges += node.GetOutDegree()
@@ -225,7 +202,7 @@ func (graph *Graph) GetNumberOfEdges() (numberOfEdges int) {
 }
 
 // GetNumberOfSCComponents return number of
-// strongly connected components in 'ccomplexity.graph'.
+// strongly connected components in 'graph'.
 func (graph *Graph) GetNumberOfSCComponents() int {
 	//We don't want to run Tarjan's once again if algorithm is already executed.
 	if graph.scc == nil {
@@ -283,6 +260,6 @@ func (graph *Graph) Draw(name string) error {
 	if _, err := io.WriteString(dottyFile, content.String()); err != nil {
 		return err
 	}
-	cmd := exec.Command("dot", "-Tpdf", dottyFile.Name(), "-o", name + ".pdf")
+	cmd := exec.Command("dot", "-Tpdf", dottyFile.Name(), "-o", name+".pdf")
 	return cmd.Run()
 }

@@ -1,33 +1,14 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package graph_test
 
 import (
-	"testing"
 	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
+	"testing"
 )
 
-// Letter is the type to store in the ccomplexity.graph.
+// Letter is the type to store in the graph.
 type Letter struct {
 	letter string
 }
@@ -37,7 +18,7 @@ func (l Letter) UID() string {
 	return l.letter
 }
 
-// Letter must satisfies the Value interface in ccomplexity.graph.
+// Letter must satisfies the Value interface in graph.
 func (l Letter) String() string {
 	return l.letter
 }
@@ -83,7 +64,7 @@ func TestDirectedGraph(test *testing.T) {
 
 	graph := graph.NewGraph()
 
-	//Add directed node-pairs to ccomplexity.graph.
+	//Add directed node-pairs to graph.
 	graph.InsertEdge(&a, &b)
 	graph.InsertEdge(&a, &d)
 	graph.InsertEdge(&b, &d)
@@ -93,7 +74,7 @@ func TestDirectedGraph(test *testing.T) {
 	graph.InsertEdge(&e, &f)
 	graph.InsertEdge(&f, &h)
 
-	//Test number of nodes in ccomplexity.graph.
+	//Test number of nodes in graph.
 	if graph.GetNumberOfNodes() != 8 {
 		test.Fatalf("Graph should contain 8 nodes, not %d!\n", graph.GetNumberOfNodes())
 	}
@@ -182,7 +163,7 @@ func TestDepthFirstSearchInGraph(t *testing.T) {
 
 	graph := graph.NewGraph()
 
-	//Add directed node-pairs to ccomplexity.graph.
+	//Add directed node-pairs to graph.
 	graph.InsertEdge(&a, &b)
 	graph.InsertEdge(&a, &d)
 	graph.InsertEdge(&b, &d)

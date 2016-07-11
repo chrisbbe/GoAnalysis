@@ -1,17 +1,16 @@
-// Copyright (c) 2015-2016 The GoAnalysis Authors. All rights reserved.
-// Use of this source code is governed by the MIT license found in the
-// LICENSE.txt file.
-
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package main
 
 import (
 	"flag"
-	"os"
-	"log"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter"
+	"log"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
-	"path"
 	"time"
 )
 

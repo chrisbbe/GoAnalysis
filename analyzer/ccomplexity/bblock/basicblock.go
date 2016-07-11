@@ -1,24 +1,6 @@
-// The MIT License (MIT)
-
-// Copyright (c) 2015-2016 Christian Bergum Bergersen
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 package bblock
 
 import (
@@ -82,7 +64,7 @@ func (bbType BasicBlockType) String() string {
 func (basicBlock *BasicBlock) UID() string {
 	//Both START and EXIT blocks are meta-blocks, giving them negative UID.
 	if basicBlock.Type == START || basicBlock.Type == EXIT {
-		return fmt.Sprintf("%d", 0 - basicBlock.Type)
+		return fmt.Sprintf("%d", 0-basicBlock.Type)
 	}
 	return fmt.Sprintf("%d", basicBlock.EndLine)
 }
@@ -138,12 +120,12 @@ type visitor struct {
 	basicBlocks   map[int]*BasicBlock
 	sourceFileSet *token.FileSet
 
-	lastBlock     *BasicBlock
+	lastBlock *BasicBlock
 
-	returnBlock   *BasicBlock
-	forBlock      *BasicBlock
-	forBodyBlock  *BasicBlock
-	switchBlock   *BasicBlock
+	returnBlock  *BasicBlock
+	forBlock     *BasicBlock
+	forBodyBlock *BasicBlock
+	switchBlock  *BasicBlock
 }
 
 // UpdateBasicBlock updates all the variables from the newBasicBlock into the basicBlock object.
@@ -211,8 +193,8 @@ func GetBasicBlocksFromSourceCode(srcFile []byte) ([]*BasicBlock, error) {
 	numberOfBasicBlocks := len(basicBlocks)
 	for index, bBlock := range basicBlocks {
 		if bBlock.Type != FOR_BODY && bBlock.Type != ELSE_CONDITION && bBlock.Type != ELSE_BODY && bBlock.Type != COMM_CLAUSE && bBlock.Type != CASE_CLAUSE && bBlock.Type != RETURN_STMT {
-			if numberOfBasicBlocks > index + 1 {
-				bBlock.AddSuccessorBlock(basicBlocks[index + 1])
+			if numberOfBasicBlocks > index+1 {
+				bBlock.AddSuccessorBlock(basicBlocks[index+1])
 			}
 		}
 	}

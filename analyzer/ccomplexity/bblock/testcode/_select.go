@@ -9,23 +9,26 @@ import (
 	"time"
 )
 
-func main() { // BB #0 ending.
+func main() {
+	// BB #0 ending.
 	stop := make(chan int)
 
-	go func() { // BB #1 ending.
+	go func() {
+		// BB #1 ending.
 		os.Stdin.Read(make([]byte, 1))
 		stop <- 1
 	}()
 
 	fmt.Println("Started timer, press return to stop watch.")
 	tick := time.Tick(time.Second)
-	for time := 0; ; time++ { // BB #2 ending.
+	for time := 0; ; time++ {
+		// BB #2 ending.
 		select { // BB #3 ending.
-		case <-tick: // BB #4 ending.
-			fmt.Println(time)
-		case <-stop: // BB #5 ending.
+		case <-tick:
+			fmt.Println(time) // BB #5 ending.
+		case <-stop:
 			fmt.Printf("Watch stopped after %d seconds.\n", time)
-			return // BB #6 ending.
+			return // BB #5 ending.
 		}
 	}
-}
+} // BB #6 ending.
