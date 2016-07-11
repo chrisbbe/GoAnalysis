@@ -29,7 +29,7 @@ func verifyCyclomaticComplexity(expectedComplexity []*FunctionComplexity, correc
 }
 
 func TestSimpleComplexityFunctionLevel(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_HelloWorld.go")
+	srcFile, err := ioutil.ReadFile("./testcode/_helloworld.go")
 	if err != nil {
 		t.Fatal(err)
 	}
