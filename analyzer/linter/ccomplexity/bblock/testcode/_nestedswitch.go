@@ -7,7 +7,10 @@ import "fmt"
 
 const TWO = 2
 
-func main() { // BB #0 ending
+// @SuppressRule("FMT_PRINTING")
+// @SuppressRule("ERROR_IGNORED")
+func main() {
+	// BB #0 ending
 	number := 1
 	secondNumber := 3
 

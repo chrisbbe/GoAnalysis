@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter"
 	"log"
@@ -14,8 +15,9 @@ import (
 	"time"
 )
 
-var sourceRootDir = flag.String("dir", "", "Absolute path to root directory of Golang source files to be analysed")
-var printHelp = flag.Bool("help", false, "Print this usage help")
+var sourceRootDir = flag.String("dir", "", "Absolute path to root directory of Golang source files to be analysed.")
+var jsonOutput = flag.Bool("json", false, "Print result as JSON.")
+var printHelp = flag.Bool("help", false, "Print this usage help.")
 
 func main() {
 	flag.Parse()
@@ -24,23 +26,51 @@ func main() {
 		flag.Usage()
 	}
 
+	//var violations []*linter.GoFile
 	// Option dir selected.
 	if len(*sourceRootDir) > 0 {
 		start := time.Now()
 
 		if ok, err := pathExists(*sourceRootDir); ok {
-			goFiles, _ := getGoFiles(*sourceRootDir)
-			violations := detectViolations(goFiles)
+			goFiles, errors := getGoFiles(*sourceRootDir)
 
-			log.Print("**** VIOLATIONS ****\n")
-
-			log.Printf("Found %d violations!\n", len(violations))
-			for _, vio := range violations {
-				log.Printf("Detected violation %32s on line %5d in %s\n", vio.Type, vio.SrcLine, vio.SrcPath)
+			for _, err := range errors {
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 
-			elapsed := time.Since(start)
-			log.Printf("Analysis took %s\n", elapsed)
+			goFileViolations, err := linter.DetectViolations(goFiles...)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Direct output to console as JSON.
+			if *jsonOutput && len(goFileViolations) > 0 {
+				json, err := json.MarshalIndent(goFileViolations, "", "\t")
+				if err != nil {
+					log.Fatal(err)
+				}
+				os.Stdout.Write(json)
+			} else {
+				log.SetOutput(os.Stdout) // We want to send output to stdout, instead of Stderr.
+				numberOfViolations := 0
+				// Nicely print the output to the console.
+				log.Println("-----------------------------------------------------------------------------------------------")
+
+				for _, goFile := range goFileViolations {
+					log.Printf("Violations in %s :\n", goFile.FilePath)
+					numberOfViolations += len(goFile.Violations)
+
+					for i, violation := range goFile.Violations {
+						log.Printf("\t%d) %s (Line %d) - %s\n", i, violation.Type, violation.SrcLine, violation.Description)
+					}
+					log.Println("-----------------------------------------------------------------------------------------------")
+				}
+				log.Printf("Found total %d violations!\n", numberOfViolations)
+				log.Printf("Took %s\n", time.Since(start))
+			}
+
 		} else {
 			log.Print(err)
 		}
@@ -50,18 +80,6 @@ func main() {
 	if *printHelp {
 		flag.Usage()
 	}
-}
-
-func detectViolations(goFilePath []string) (violations []*linter.Violation) {
-	for _, goFile := range goFilePath {
-		violation, err := linter.DetectViolations(goFile)
-		if err != nil {
-			log.Print(err)
-		}
-
-		violations = append(violations, violation...)
-	}
-	return violations
 }
 
 // getGoFiles searches recursively for .go files in the searchDir path, returning the absolute path to the files.

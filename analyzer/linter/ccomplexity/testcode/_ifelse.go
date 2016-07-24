@@ -3,11 +3,14 @@
 // be found in the LICENSE file.
 package main
 
-import (
-	"log"
-)
+import "log"
 
 func main() {
-	myMap := new(map[string]float64)
-	log.Println(*myMap)
+	line := "FooBar"
+
+	if len(line) == 0 {
+		log.Println("line is empty")
+	} else {
+		log.Println("line is not empty")
+	}
 }

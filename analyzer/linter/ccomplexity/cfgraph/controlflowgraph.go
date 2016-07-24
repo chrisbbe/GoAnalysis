@@ -6,9 +6,9 @@ package cfgraph
 import (
 	"bytes"
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
 	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 	"io"
 	"os"
 	"os/exec"
@@ -41,7 +41,10 @@ func (controlFlowGraph ControlFlowGraph) Draw(name string) error {
 	content.WriteString("/* --------------------------------------------------- */\n")
 
 	// Start writing the graph.
-	content.WriteString("digraph AST {\n")
+	content.WriteString("digraph ControlFlowGraph {\n")
+	content.WriteString("\trankdir=TB;\n")
+	content.WriteString("\tnode [shape = doublecircle]; Start Exit;")
+	content.WriteString("\tnode [shape = ellipse];")
 	for _, node := range controlFlowGraph.Nodes {
 		for _, outNode := range node.GetOutNodes() {
 			content.WriteString(fmt.Sprintf("\t\"%s\" -> \"%s\";\n", node, outNode))
@@ -71,22 +74,25 @@ func GetControlFlowGraph(basicBlocks []*bblock.BasicBlock) (cfg []*ControlFlowGr
 			prevFunctionBlockIndex = index // Track which block was the last FUNCTION_ENTRY block.
 		}
 	}
-	cfg = append(cfg, getControlFlowGraph(basicBlocks[prevFunctionBlockIndex:len(basicBlocks)])) //
-	return cfg
+
+	if prevFunctionBlockIndex >= 0 {
+		cfg = append(cfg, getControlFlowGraph(basicBlocks[prevFunctionBlockIndex:]))
+	}
+	return
 }
 
 // getControlFlowGraph generates and returns the control-flow graph based on the array of basic blocks.
 func getControlFlowGraph(basicBlocks []*bblock.BasicBlock) *ControlFlowGraph {
-	//controlFlowGraph := graph.NewGraph()
-	//var controlFlowGraph ControlFlowGraph
 	controlFlowGraph := New()
 	var lastBlockAdded *bblock.BasicBlock
 
 	for _, basicBlock := range basicBlocks {
 		lastBlockAdded = basicBlock
+		basicBlockNode := &graph.Node{Value: basicBlock}
+		controlFlowGraph.InsertNode(basicBlockNode)
 
 		for _, successorBlock := range basicBlock.GetSuccessorBlocks() {
-			controlFlowGraph.InsertEdge(&graph.Node{Value: basicBlock}, &graph.Node{Value: successorBlock})
+			controlFlowGraph.InsertEdge(basicBlockNode, &graph.Node{Value: successorBlock})
 			lastBlockAdded = successorBlock
 		}
 	}

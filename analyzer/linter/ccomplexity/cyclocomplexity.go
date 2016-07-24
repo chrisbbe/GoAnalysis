@@ -4,17 +4,22 @@
 package ccomplexity
 
 import (
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/cfgraph"
+	"fmt"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/cfgraph"
 )
 
 // FunctionComplexity represents cyclomatic complexity in a function or method.
 type FunctionComplexity struct {
 	Name             string                    //Function name.
-	Line             int                       //Line number in source file.
+	SrcLine          int                       //Line number in source file where func is declared.
 	Complexity       int                       //Cyclomatic complexity value.
 	ControlFlowGraph *cfgraph.ControlFlowGraph //Control-flow graph in function.
 	BasicBlocks      []*bblock.BasicBlock      //Basic-blocks in function.
+}
+
+func (funCC *FunctionComplexity) String() string {
+	return fmt.Sprintf("%s() at line %d has CC: %d\n", funCC.Name, funCC.SrcLine, funCC.Complexity)
 }
 
 func (function *FunctionComplexity) GetNumberOfNodes() int {
@@ -33,17 +38,18 @@ func GetCyclomaticComplexity(cfg *cfgraph.ControlFlowGraph) int {
 	return cfg.GetNumberOfEdges() - cfg.GetNumberOfNodes() + cfg.GetNumberOfSCComponents()
 }
 
-func GetCyclomaticComplexityFunctionLevel(srcFile []byte) (functions []*FunctionComplexity, err error) {
-	blocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+func GetCyclomaticComplexityFunctionLevel(goSrcFile []byte) (functions []*FunctionComplexity, err error) {
+	blocks, err := bblock.GetBasicBlocksFromSourceCode(goSrcFile)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, cfg := range cfgraph.GetControlFlowGraph(blocks) {
 		complexity := GetCyclomaticComplexity(cfg)
+		funcBlock := cfg.Root.Value.(*bblock.BasicBlock)
 		functions = append(functions, &FunctionComplexity{
-			Name:             cfg.Root.Value.(*bblock.BasicBlock).FunctionName,
-			Line:             blocks[0].EndLine,
+			Name:             funcBlock.FunctionName,
+			SrcLine:          funcBlock.FunctionDeclLine,
 			Complexity:       complexity,
 			ControlFlowGraph: cfg,
 			BasicBlocks:      blocks,

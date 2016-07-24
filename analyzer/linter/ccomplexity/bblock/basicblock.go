@@ -52,8 +52,8 @@ var basicBlockTypeStrings = [...]string{
 	ELSE_BODY:        "ELSE_BODY",
 	FOR_BODY:         "FOR_BODY",
 	EMPTY:            "EMPTY",
-	START:            "START",
-	EXIT:             "EXIT",
+	START:            "Start",
+	EXIT:             "Exit",
 	UNKNOWN:          "UNKNOWN",
 }
 
@@ -80,8 +80,7 @@ func (basicBlock *BasicBlock) String() string {
 
 func (basicBlock *BasicBlock) AddSuccessorBlock(successorBlocks ...*BasicBlock) {
 	for _, successorBlock := range successorBlocks {
-		basicBlock.successor[successorBlock.EndLine] = successorBlock
-		basicBlock.LastSuccessor = successorBlock
+		basicBlock.successor[successorBlock.EndLine] = successorBlock //Update or add.
 	}
 }
 
@@ -108,19 +107,20 @@ func (basicBlock *BasicBlock) GetSuccessorBlocks() []*BasicBlock {
 }
 
 type BasicBlock struct {
-	Number        int
-	Type          BasicBlockType
-	EndLine       int
-	LastSuccessor *BasicBlock
-	successor     map[int]*BasicBlock
-	FunctionName  string
+	Number           int
+	Type             BasicBlockType
+	EndLine          int
+	successor        map[int]*BasicBlock
+	FunctionName     string
+	FunctionDeclLine int
 }
 
 type visitor struct {
 	basicBlocks   map[int]*BasicBlock
 	sourceFileSet *token.FileSet
 
-	lastBlock *BasicBlock
+	lastBlock     *BasicBlock
+	prevLastBlock *BasicBlock
 
 	returnBlock  *BasicBlock
 	forBlock     *BasicBlock
@@ -134,9 +134,9 @@ func (basicBlock *BasicBlock) UpdateBasicBlock(newBasicBlock *BasicBlock) {
 		basicBlock.Number = newBasicBlock.Number
 		basicBlock.Type = newBasicBlock.Type
 		basicBlock.EndLine = newBasicBlock.EndLine
-		basicBlock.LastSuccessor = newBasicBlock.LastSuccessor
 		basicBlock.successor = newBasicBlock.successor
 		basicBlock.FunctionName = newBasicBlock.FunctionName
+		basicBlock.FunctionDeclLine = newBasicBlock.FunctionDeclLine
 	}
 }
 
@@ -144,7 +144,9 @@ func (v *visitor) AddBasicBlock(blockType BasicBlockType, position token.Pos) *B
 	line := v.sourceFileSet.File(position).Line(position)
 	basicBlock := NewBasicBlock(-1, blockType, line) //-1 indicates number will be set later.
 
-	v.lastBlock = basicBlock //Bookkeeping
+	// Bookkeeping.
+	v.prevLastBlock = v.lastBlock
+	v.lastBlock = basicBlock
 
 	//Update the existing block., or add new block.
 	if bb, ok := v.basicBlocks[line]; ok {
@@ -204,10 +206,10 @@ func GetBasicBlocksFromSourceCode(srcFile []byte) ([]*BasicBlock, error) {
 
 func PrintBasicBlocks(basicBlocks []*BasicBlock) {
 	for _, bb := range basicBlocks {
-		log.Printf("%d) %s (EndLine: %d) {%p}\n", bb.Number, bb.Type.String(), bb.EndLine, bb)
+		log.Printf("%d) %s (EndLine: %d)\n", bb.Number, bb.Type.String(), bb.EndLine)
 
 		for _, sBB := range bb.GetSuccessorBlocks() {
-			log.Printf("\t-> (%d) %s (EndLine: %d) {%p}\n", sBB.Number, sBB.Type.String(), sBB.EndLine, sBB)
+			log.Printf("\t-> (%d) %s (EndLine: %d)\n", sBB.Number, sBB.Type.String(), sBB.EndLine)
 		}
 	}
 }
@@ -227,13 +229,15 @@ func GetBasicBlockTypeFromStmt(stmtList []ast.Stmt) (BasicBlockType, ast.Stmt) {
 	return UNKNOWN, nil
 }
 
-func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
+func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	if node != nil {
 		switch t := node.(type) {
 
 		case *ast.FuncDecl:
 			funcDeclBlock := v.AddBasicBlock(FUNCTION_ENTRY, t.Pos())
+			// Set information about Function in the block.
 			funcDeclBlock.FunctionName = t.Name.Name
+			funcDeclBlock.FunctionDeclLine = v.sourceFileSet.File(t.Pos()).Line(t.Pos())
 
 			for _, s := range t.Body.List {
 				if _, ok := s.(*ast.ReturnStmt); ok {
@@ -254,7 +258,13 @@ func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
 			return nil
 
 		case *ast.ReturnStmt:
+			prevBlock := v.lastBlock
 			v.returnBlock = v.AddBasicBlock(RETURN_STMT, t.Pos())
+
+			if prevBlock != nil && prevBlock.Type != RETURN_STMT && len(prevBlock.successor) == 0 {
+				prevBlock.AddSuccessorBlock(v.returnBlock)
+			}
+
 			if v.switchBlock != nil {
 				v.switchBlock.AddSuccessorBlock(v.returnBlock)
 			}
@@ -264,32 +274,49 @@ func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
 
 		case *ast.IfStmt:
 			ifBlock := v.AddBasicBlock(IF_CONDITION, t.Pos())
-			elseConditionBlock := v.AddBasicBlock(ELSE_CONDITION, t.Else.Pos())
-			elseBodyBlock := v.AddBasicBlock(ELSE_BODY, t.Else.End())
-
-			ifBlock.AddSuccessorBlock(elseBodyBlock)
 
 			for _, stmt := range t.Body.List {
 				v.Visit(stmt)
 			}
 
-			if v.returnBlock != nil {
-				elseConditionBlock.AddSuccessorBlock(v.returnBlock)
-				elseBodyBlock.AddSuccessorBlock(v.returnBlock)
+			var elseConditionBlock, elseBodyBlock *BasicBlock
+			if t.Else != nil {
+
+				if v.lastBlock != nil && v.lastBlock.Type != RETURN_STMT {
+					elseConditionBlock = v.AddBasicBlock(ELSE_CONDITION, t.Else.Pos())
+				} else {
+					// We don't want to set return block as successor to elseCondition.
+					v.returnBlock = nil
+				}
+
+				elseBodyBlock = v.AddBasicBlock(ELSE_BODY, t.Else.End())
+				ifBlock.AddSuccessorBlock(elseBodyBlock)
+
+				if v.returnBlock != nil {
+					if elseConditionBlock != nil {
+						elseConditionBlock.AddSuccessorBlock(v.returnBlock)
+					}
+					elseBodyBlock.AddSuccessorBlock(v.returnBlock)
+				}
 			}
 
 		case *ast.ForStmt:
 			v.forBlock = v.AddBasicBlock(FOR_STATEMENT, t.Pos())
+
 			if v.returnBlock != nil {
 				v.forBlock.AddSuccessorBlock(v.returnBlock)
 			}
 
 			tmpReturnBlock := v.returnBlock
+			tmpForBlock := v.forBlock
 			v.returnBlock = v.forBlock
+
 			for _, s := range t.Body.List {
 				v.Visit(s)
 			}
+
 			v.returnBlock = tmpReturnBlock
+			v.forBlock = tmpForBlock
 
 			if v.lastBlock.Type == FOR_STATEMENT {
 				v.AddBasicBlock(FOR_BODY, t.End())
@@ -402,7 +429,6 @@ func (v *visitor) Visit(node ast.Node) (w ast.Visitor) {
 			}
 
 			if v.returnBlock != nil {
-				//TODO: Should this be here, what about the last check further down, the same with CaseClause
 				caseClause.AddSuccessorBlock(v.returnBlock)
 			}
 

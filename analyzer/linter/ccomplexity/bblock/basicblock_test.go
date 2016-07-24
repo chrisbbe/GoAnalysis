@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/bblock"
 )
 
 // VerifyBasicBlocks checks the list of expected basic-blocks with the list of actual basic-blocks.
@@ -18,7 +18,7 @@ func verifyBasicBlocks(expectedBasicBlocks []*bblock.BasicBlock, correctBasicBlo
 	}
 
 	//Loop through all generated basic-blocks and check if they are similar to the correct once.
-	for index, _ := range expectedBasicBlocks {
+	for index := range expectedBasicBlocks {
 		if expectedBasicBlocks[index].Type != correctBasicBlocks[index].Type {
 			//Check that basic-block type is correct.
 			return fmt.Errorf("Basic block nr. %d should be of type %s, but are of type %s!\n",
@@ -109,6 +109,65 @@ func TestIfElseBasicBlock(t *testing.T) {
 	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 12)
 	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 15)
 	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 16)
+
+	BB0.AddSuccessorBlock(BB1)
+	BB1.AddSuccessorBlock(BB2, BB3)
+	BB2.AddSuccessorBlock(BB4)
+	BB3.AddSuccessorBlock(BB4)
+
+	correctBasicBlocks := []*bblock.BasicBlock{
+		BB0, BB1, BB2, BB3, BB4,
+	}
+
+	if err := verifyBasicBlocks(expectedBasicBlocks, correctBasicBlocks); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIfElseWithReturn(t *testing.T) {
+	srcFile, err := ioutil.ReadFile("./testcode/_ifelsereturn.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 8)
+	BB2 := bblock.NewBasicBlock(2, bblock.RETURN_STMT, 10)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 13)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 14)
+
+	BB0.AddSuccessorBlock(BB1)
+	BB1.AddSuccessorBlock(BB2, BB3)
+	BB3.AddSuccessorBlock(BB4)
+
+	correctBasicBlocks := []*bblock.BasicBlock{
+		BB0, BB1, BB2, BB3, BB4,
+	}
+
+	if err := verifyBasicBlocks(expectedBasicBlocks, correctBasicBlocks); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIfElseIfBasicBlock(t *testing.T) {
+	srcFile, err := ioutil.ReadFile("./testcode/_ifelseif.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 10)
+	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 12)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 15)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 19)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -313,17 +372,17 @@ func TestNestedSwitchBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 10)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 14)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 17)
-	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 20)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 23)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 25)
-	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 27)
-	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 30)
-	BB8 := bblock.NewBasicBlock(8, bblock.CASE_CLAUSE, 32)
-	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 34)
-	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 36)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 12)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 16)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 19)
+	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 22)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 25)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 27)
+	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 29)
+	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 32)
+	BB8 := bblock.NewBasicBlock(8, bblock.CASE_CLAUSE, 34)
+	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 36)
+	BB10 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 38)
 
 	correctBasicBlocks := []*bblock.BasicBlock{
 		BB0, BB1, BB2, BB3, BB4, BB5, BB6, BB7, BB8, BB9, BB10,
@@ -344,6 +403,64 @@ func TestNestedSwitchBasicBlock(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+/*
+func TestNestedSwitchesBasicBlock(t *testing.T) {
+	srcFile, err := ioutil.ReadFile("./testcode/_nestedswitches.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for index, bb := range expectedBasicBlocks {
+		log.Printf("%d) %s\n", index, bb)
+
+		for _, sbb := range bb.GetSuccessorBlocks() {
+			log.Printf("\t-> %s\n", sbb)
+		}
+	}
+
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 13)
+	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 16)
+	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 19)
+	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 22)
+	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 24)
+	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 26)
+	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 28)
+	BB8 := bblock.NewBasicBlock(8, bblock.SWITCH_STATEMENT, 34)
+	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 37)
+	BB10 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 39)
+	BB11 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 41)
+	BB12 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 43)
+	BB13 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 47)
+	BB14 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 49)
+	BB15 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 51)
+
+	correctBasicBlocks := []*bblock.BasicBlock{
+		BB0, BB1, BB2, BB3, BB4, BB5, BB6, BB7, BB8, BB9, BB10, BB11, BB12, BB13, BB14, BB15,
+	}
+
+	BB0.AddSuccessorBlock(BB1)
+	BB1.AddSuccessorBlock(BB2, BB3, BB7, BB13, BB14, BB15)
+	BB2.AddSuccessorBlock(BB10)
+	BB3.AddSuccessorBlock(BB4, BB5, BB6, BB10)
+	BB4.AddSuccessorBlock(BB10)
+	BB5.AddSuccessorBlock(BB10)
+	BB6.AddSuccessorBlock(BB10)
+	BB7.AddSuccessorBlock(BB10)
+	BB8.AddSuccessorBlock(BB10)
+	BB9.AddSuccessorBlock(BB10)
+	BB8.AddSuccessorBlock(BB9, BB10, BB11, BB12)
+
+	if err := verifyBasicBlocks(expectedBasicBlocks, correctBasicBlocks); err != nil {
+		t.Fatal(err)
+	}
+}
+*/
 
 func TestTypeSwitchBasicBlock(t *testing.T) {
 	srcFile, err := ioutil.ReadFile("./testcode/_typeswitch.go")

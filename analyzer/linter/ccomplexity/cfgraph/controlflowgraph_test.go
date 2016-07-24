@@ -5,9 +5,9 @@ package cfgraph_test
 
 import (
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/bblock"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/cfgraph"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/bblock"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/cfgraph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 	"io/ioutil"
 	"testing"
 )
@@ -50,7 +50,7 @@ func VerifyBasicBlocks(expectedBasicBlocks []*bblock.BasicBlock, correctBasicBlo
 	}
 
 	//Loop through all generated basic-blocks and check if they are similar to the correct once.
-	for index, _ := range expectedBasicBlocks {
+	for index := range expectedBasicBlocks {
 		if expectedBasicBlocks[index].Type != correctBasicBlocks[index].Type {
 			//Check that basic-block type is correct.
 			return fmt.Errorf("Basic block nr. %d should be of type %s, but are of type %s!\n",

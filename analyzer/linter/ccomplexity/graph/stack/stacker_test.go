@@ -1,7 +1,7 @@
 package stack_test
 
 import (
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph/stack"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph/stack"
 	"testing"
 )
 

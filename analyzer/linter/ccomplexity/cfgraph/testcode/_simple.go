@@ -5,6 +5,7 @@ package main
 
 import "fmt"
 
-func main() { // BB #0 ending.
+func main() {
+	// BB #0 ending.
 	fmt.Println("Hello World\n!")
 } // BB #1 ending.

@@ -39,7 +39,28 @@ func TestSimpleComplexityFunctionLevel(t *testing.T) {
 	}
 
 	correctCyclomaticComplexity := []FunctionComplexity{
-		FunctionComplexity{Name: "main", Complexity: 1},
+		{Name: "main", Complexity: 1},
+	}
+
+	if err := verifyCyclomaticComplexity(expectedCyclomaticComplexity, correctCyclomaticComplexity); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestIfElseComplexityFunctionLevel(t *testing.T) {
+	srcFile, err := ioutil.ReadFile("./testcode/_ifelse.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedCyclomaticComplexity[0].ControlFlowGraph.Draw("ifelse")
+
+	correctCyclomaticComplexity := []FunctionComplexity{
+		{Name: "main", Complexity: 2},
 	}
 
 	if err := verifyCyclomaticComplexity(expectedCyclomaticComplexity, correctCyclomaticComplexity); err != nil {
@@ -58,8 +79,8 @@ func TestMethodComplexity(t *testing.T) {
 	}
 
 	correctCyclomaticComplexity := []FunctionComplexity{
-		FunctionComplexity{Name: "main", Complexity: 1},
-		FunctionComplexity{Name: "swap", Complexity: 1},
+		{Name: "main", Complexity: 1},
+		{Name: "swap", Complexity: 1},
 	}
 
 	if err := verifyCyclomaticComplexity(expectedCyclomaticComplexity, correctCyclomaticComplexity); err != nil {
@@ -78,8 +99,8 @@ func TestSwitcherComplexity(t *testing.T) {
 	}
 
 	correctCyclomaticComplexity := []FunctionComplexity{
-		FunctionComplexity{Name: "main", Complexity: 1},
-		FunctionComplexity{Name: "monthNumberToString", Complexity: 14},
+		{Name: "main", Complexity: 1},
+		{Name: "monthNumberToString", Complexity: 14},
 	}
 
 	if err := verifyCyclomaticComplexity(expectedCyclomaticComplexity, correctCyclomaticComplexity); err != nil {
@@ -97,8 +118,8 @@ func TestGreatestCommonDivisorComplexity(t *testing.T) {
 		t.Fatal(err)
 	}
 	correctCyclomaticComplexity := []FunctionComplexity{
-		FunctionComplexity{Name: "gcd", Complexity: 2},
-		FunctionComplexity{Name: "main", Complexity: 1},
+		{Name: "gcd", Complexity: 2},
+		{Name: "main", Complexity: 1},
 	}
 
 	if err := verifyCyclomaticComplexity(expectedCyclomaticComplexity, correctCyclomaticComplexity); err != nil {

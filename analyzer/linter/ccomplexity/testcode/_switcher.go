@@ -15,7 +15,7 @@ func monthNumberToString(month int) string {
 	case 1:
 		return "January"
 	case 2:
-		return "Febrary"
+		return "February"
 	case 3:
 		return "March"
 	case 4:

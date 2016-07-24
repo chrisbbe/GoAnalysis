@@ -4,8 +4,10 @@
 package linter
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity"
 	"go/ast"
 	"go/importer"
 	"go/parser"
@@ -31,8 +33,9 @@ const (
 	GOTO_USED
 	CONDITION_EVALUATED_STATICALLY
 	BUFFER_NOT_FLUSHED
-	EARLY_RETURN
+	RETURN_KILLS_CODE
 	NO_ELSE_RETURN
+	CYCLOMATIC_COMPLEXITY
 )
 
 var ruleStrings = map[Rule]string{
@@ -47,25 +50,85 @@ var ruleStrings = map[Rule]string{
 	GOTO_USED:                      "GOTO_USED",
 	CONDITION_EVALUATED_STATICALLY: "CONDITION_EVALUATED_STATICALLY",
 	BUFFER_NOT_FLUSHED:             "NO_BUFFERED_FLUSHING",
-	EARLY_RETURN:                   "EARLY_RETURN",
+	RETURN_KILLS_CODE:              "RETURN_KILLS_CODE",
 	NO_ELSE_RETURN:                 "NO_ELSE_RETURN",
+	CYCLOMATIC_COMPLEXITY:          "CYCLOMATIC_COMPLEXITY",
+}
+
+type GoFile struct {
+	FilePath   string
+	Violations []*Violation
+
+	goSrcFile  []byte
+	goFileNode *ast.File
+	fileSet    *token.FileSet
+	typeInfo   *types.Info
+}
+
+type Violation struct {
+	Type        Rule
+	Description string
+	SrcLine     int
 }
 
 func (rule Rule) String() string {
 	return ruleStrings[rule]
 }
 
-func DetectViolations(goSrcFile string) (violations []*Violation, err error) {
-	srcFile, err := ioutil.ReadFile(goSrcFile)
+// Marshal Rule string value instead of int value.
+func (rule Rule) MarshalText() ([]byte, error) {
+	var buffer bytes.Buffer
+	buffer.WriteString(rule.String())
+	return buffer.Bytes(), nil
+}
+
+func DetectViolations(goSrcFiles ...string) (goFileViolations []*GoFile, err error) {
+	for _, goSrcFile := range goSrcFiles {
+		srcFile, err := ioutil.ReadFile(goSrcFile)
+		if err != nil {
+			return goFileViolations, err
+		}
+
+		goFile := &GoFile{
+			goSrcFile: srcFile,
+			FilePath:  goSrcFile,
+		}
+
+		goFile.measureCyclomaticComplexity(10)
+		goFile.detectBugsAndCodeSmells()
+
+		if len(goFile.Violations) > 0 {
+			goFileViolations = append(goFileViolations, goFile)
+		}
+	}
+	return goFileViolations, nil
+}
+
+func (goFile *GoFile) measureCyclomaticComplexity(upperLimit int) error {
+	complexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(goFile.goSrcFile)
 	if err != nil {
-		return violations, err
+		return err
 	}
 
+	for _, funCC := range complexity {
+		if funCC.Complexity > upperLimit {
+			goFile.Violations = append(goFile.Violations, &Violation{
+				Type:    CYCLOMATIC_COMPLEXITY,
+				SrcLine: funCC.SrcLine,
+				Description: fmt.Sprintf("Cyclomatic complexity in %s() is %d, upper limit is %d.",
+					funCC.Name, funCC.Complexity, upperLimit),
+			})
+		}
+	}
+	return nil
+}
+
+func (goFile *GoFile) detectBugsAndCodeSmells() error {
 	// Create the AST by parsing src.
 	fileSet := token.NewFileSet() // positions are relative to fileSet
-	fi, err := parser.ParseFile(fileSet, "", srcFile, parser.ParseComments|parser.AllErrors)
+	fileNode, err := parser.ParseFile(fileSet, "", goFile.goSrcFile, parser.ParseComments|parser.AllErrors)
 	if err != nil {
-		return violations, err
+		return err
 	}
 
 	// Visit() method may panic()
@@ -83,33 +146,24 @@ func DetectViolations(goSrcFile string) (violations []*Violation, err error) {
 		}
 	}()
 
-	goFile := file{
-		goFile:   fi,
-		fileSet:  fileSet,
-		filePath: goSrcFile,
-	}
+	goFile.goFileNode = fileNode
+	goFile.fileSet = fileSet
 
 	conf := types.Config{Importer: importer.Default()}
 	goFile.typeInfo = &types.Info{
-		Types:      make(map[ast.Expr]types.TypeAndValue),
-		Defs:       make(map[*ast.Ident]types.Object),
-		Uses:       make(map[*ast.Ident]types.Object),
-		Implicits:  make(map[ast.Node]types.Object),
-		Selections: make(map[*ast.SelectorExpr]*types.Selection),
+		Types: make(map[ast.Expr]types.TypeAndValue),
 	}
 
-	//TODO: What should pathstring be ?
-	if _, err := conf.Check("cmd/hello", goFile.fileSet, []*ast.File{goFile.goFile}, goFile.typeInfo); err != nil {
-		return violations, err
+	if _, err := conf.Check(fileNode.Name.Name, goFile.fileSet, []*ast.File{goFile.goFileNode}, goFile.typeInfo); err != nil {
+		return err
 	}
 
 	goFile.Analyse()
-
-	return goFile.violations, nil
-
+	return nil
 }
 
-func (goFile *file) Analyse() {
+// Analyse fires off all detection algorithms on the goFile.
+func (goFile *GoFile) Analyse() {
 	goFile.detectFmtPrinting()
 	goFile.detectMapsAllocatedWithNew()
 	goFile.detectEmptyIfBody()
@@ -120,15 +174,8 @@ func (goFile *file) Analyse() {
 	goFile.detectIgnoredErrors()
 	goFile.detectStaticCondition()
 	goFile.detectStringMethodCallingItself()
-	goFile.detectEarlyReturn()
-	goFile.detectReturnBeforeElse()
+	goFile.detectReturnKillingCode()
 	goFile.detectBufferNotFlushed()
-}
-
-type Violation struct {
-	Type    Rule
-	SrcLine int
-	SrcPath string
 }
 
 func (violation *Violation) String() string {
@@ -144,40 +191,43 @@ func (w walker) Visit(node ast.Node) ast.Visitor {
 	return nil
 }
 
-type file struct {
-	goFile     *ast.File
-	fileSet    *token.FileSet
-	typeInfo   *types.Info
-	violations []*Violation
-
-	filePath string
+func (f *GoFile) walk(fn func(ast.Node) bool) {
+	ast.Walk(walker(fn), f.goFileNode)
 }
 
-func (f *file) walk(fn func(ast.Node) bool) {
-	ast.Walk(walker(fn), f.goFile)
-}
-
-func (f *file) AddViolation(tokPosition token.Pos, violationType Rule) {
+// AddViolation adds a new violation as specified trough its argument to the GoFile list of violations.
+func (f *GoFile) AddViolation(tokPosition token.Pos, violationType Rule, description string) {
 	srcLine := getSourceCodeLineNumber(f.fileSet, tokPosition)
 	violation := &Violation{
-		Type:    violationType,
-		SrcLine: srcLine,
-		SrcPath: f.filePath,
+		Type:        violationType,
+		Description: description,
+		SrcLine:     srcLine,
 	}
-	f.violations = append(f.violations, violation)
+	f.Violations = append(f.Violations, violation)
 }
 
-func (f *file) detectFmtPrinting() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: FMT_PRINTING.
+func (goFile *GoFile) detectFmtPrinting() {
+	ignored := false
+	goFile.walk(func(node ast.Node) bool {
 		fmtMethods := []string{"Print", "Println", "Printf"}
 
 		switch t := node.(type) {
+		case *ast.FuncDecl:
+			ignored = ruleIgnored(FMT_PRINTING, t.Doc)
 		case *ast.SelectorExpr:
-			if packName, ok := t.X.(*ast.Ident); ok {
-				for _, method := range fmtMethods {
-					if packName.Name == "fmt" && t.Sel.Name == method {
-						f.AddViolation(t.Pos(), FMT_PRINTING)
-						return false
+			if !ignored {
+				if packName, ok := t.X.(*ast.Ident); ok {
+					for _, method := range fmtMethods {
+						if packName.Name == "fmt" && t.Sel.Name == method {
+							goFile.AddViolation(
+								t.Pos(),
+								FMT_PRINTING,
+								fmt.Sprint("Printing from the fmt package are not synchronized and usually intended for"+
+									" debugging purposes. Consider to use the log package!"),
+							)
+							return false
+						}
 					}
 				}
 			}
@@ -186,8 +236,9 @@ func (f *file) detectFmtPrinting() {
 	})
 }
 
-func (f *file) detectMapsAllocatedWithNew() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: MAP_ALLOCATED_WITH_NEW.
+func (goFile *GoFile) detectMapsAllocatedWithNew() {
+	goFile.walk(func(node ast.Node) bool {
 		newKeyword := "new"
 
 		switch t := node.(type) {
@@ -195,7 +246,12 @@ func (f *file) detectMapsAllocatedWithNew() {
 			if value, ok := t.Fun.(*ast.Ident); ok {
 				if ok && value.Name == newKeyword {
 					if _, ok := t.Args[0].(*ast.MapType); ok {
-						f.AddViolation(t.Pos(), MAP_ALLOCATED_WITH_NEW)
+						goFile.AddViolation(
+							t.Pos(),
+							MAP_ALLOCATED_WITH_NEW,
+							fmt.Sprint("Maps must be initialized with make(), new() allocates a nil map causing runtime "+
+								"panic on write operations!"),
+						)
 						return false
 					}
 				}
@@ -205,11 +261,16 @@ func (f *file) detectMapsAllocatedWithNew() {
 	})
 }
 
-func (f *file) detectEmptyIfBody() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: EMPTY_IF_BODY.
+func (goFile *GoFile) detectEmptyIfBody() {
+	goFile.walk(func(node ast.Node) bool {
 		if ifStmt, ok := node.(*ast.IfStmt); ok {
 			if len(ifStmt.Body.List) == 0 {
-				f.AddViolation(ifStmt.Pos(), EMPTY_IF_BODY)
+				goFile.AddViolation(
+					ifStmt.Pos(),
+					EMPTY_IF_BODY,
+					fmt.Sprint("If body is empty, wasteful to not do anything with the if condition."),
+				)
 				return false
 			}
 		}
@@ -217,12 +278,17 @@ func (f *file) detectEmptyIfBody() {
 	})
 }
 
-func (f *file) detectEmptyElseBody() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: EMPTY_ELSE_BODY.
+func (goFile *GoFile) detectEmptyElseBody() {
+	goFile.walk(func(node ast.Node) bool {
 		if ifStmt, ok := node.(*ast.IfStmt); ok {
 			if elseBody, ok := ifStmt.Else.(*ast.BlockStmt); ok {
 				if len(elseBody.List) == 0 {
-					f.AddViolation(elseBody.Pos(), EMPTY_ELSE_BODY)
+					goFile.AddViolation(
+						elseBody.Pos(),
+						EMPTY_ELSE_BODY,
+						fmt.Sprint("ELse body is empty, wasteful to not do anything with the else condition."),
+					)
 					return false
 				}
 			}
@@ -231,11 +297,16 @@ func (f *file) detectEmptyElseBody() {
 	})
 }
 
-func (f *file) detectEmptyForBody() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: EMPTY_FOR_BODY.
+func (goFile *GoFile) detectEmptyForBody() {
+	goFile.walk(func(node ast.Node) bool {
 		if forStmt, ok := node.(*ast.ForStmt); ok {
 			if len(forStmt.Body.List) == 0 {
-				f.AddViolation(forStmt.Pos(), EMPTY_FOR_BODY)
+				goFile.AddViolation(
+					forStmt.Pos(),
+					EMPTY_FOR_BODY,
+					fmt.Sprint("For body is empty, wasteful to not do anything with the for condition."),
+				)
 				return false
 			}
 		}
@@ -243,11 +314,16 @@ func (f *file) detectEmptyForBody() {
 	})
 }
 
-func (f *file) detectGoToStatements() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: GOTO_USED.
+func (goFile *GoFile) detectGoToStatements() {
+	goFile.walk(func(node ast.Node) bool {
 		if branchStmt, ok := node.(*ast.BranchStmt); ok {
 			if branchStmt.Label != nil {
-				f.AddViolation(branchStmt.Pos(), GOTO_USED)
+				goFile.AddViolation(
+					branchStmt.Pos(),
+					GOTO_USED,
+					fmt.Sprint("Please dont use GOTO statements, they lead to spagehetti code!"),
+				)
 				return false
 			}
 		}
@@ -255,8 +331,9 @@ func (f *file) detectGoToStatements() {
 	})
 }
 
-func (f *file) detectRaceInGoRoutine() {
-	f.walk(func(node ast.Node) bool {
+// Detection of violations of rule: RACE_CONDITION.
+func (goFile *GoFile) detectRaceInGoRoutine() {
+	goFile.walk(func(node ast.Node) bool {
 		if goStmt, ok := node.(*ast.GoStmt); ok {
 
 			if goFunc, ok := goStmt.Call.Fun.(*ast.FuncLit); ok {
@@ -266,7 +343,11 @@ func (f *file) detectRaceInGoRoutine() {
 					if exprStmt, ok := goFuncBodyStmt.(*ast.ExprStmt); ok {
 
 						if !validateParams(exprStmt, goFuncParams) {
-							f.AddViolation(node.Pos(), RACE_CONDITION)
+							goFile.AddViolation(
+								node.Pos(),
+								RACE_CONDITION,
+								fmt.Sprint("Loop iterator variables must be passed as argument to Goroutine, not referenced."),
+							)
 							return false
 						}
 
@@ -278,11 +359,48 @@ func (f *file) detectRaceInGoRoutine() {
 	})
 }
 
-func (f *file) detectIgnoredErrors() {
+// Detection of violations of rule: RETURN_KILLS_CODE.
+func (goFile *GoFile) detectReturnKillingCode() {
+	goFile.walk(func(node ast.Node) bool {
+
+		if funcDecl, ok := node.(*ast.FuncDecl); ok {
+			bodyLength := len(funcDecl.Body.List) - 1
+			for index, bodyStmt := range funcDecl.Body.List {
+
+				if _, ok := bodyStmt.(*ast.ReturnStmt); ok && bodyLength > index {
+					goFile.AddViolation(
+						bodyStmt.Pos(),
+						RETURN_KILLS_CODE,
+						fmt.Sprint("Code is dead because of return! There is no possible execution path to the code below in "+
+							"this scope!"),
+					)
+					return false
+				}
+			}
+		} else if ifStmt, ok := node.(*ast.IfStmt); ok {
+			bodyLength := len(ifStmt.Body.List) - 1
+
+			if ifStmt.Else != nil && bodyLength >= 0 {
+				if retStmt, ok := ifStmt.Body.List[bodyLength].(*ast.ReturnStmt); ok {
+					goFile.AddViolation(
+						retStmt.Pos(),
+						RETURN_KILLS_CODE,
+						fmt.Sprint("Else body is dead because of return! Returning in outer scope of If body causes the "+
+							"Else body to never be executed!"),
+					)
+				}
+			}
+		}
+		return true
+	})
+}
+
+// Detection of violations of rule: ERROR_IGNORE.
+func (goFile *GoFile) detectIgnoredErrors() {
 	errorType := "error"
 	ignored := false
 
-	f.walk(func(node ast.Node) bool {
+	goFile.walk(func(node ast.Node) bool {
 		switch t := node.(type) {
 		case *ast.FuncDecl:
 			ignored = ruleIgnored(ERROR_IGNORED, t.Doc)
@@ -298,11 +416,15 @@ func (f *file) detectIgnoredErrors() {
 					}
 				}
 				if len(ignoredReturnIndex) != 0 {
-					if tv, ok := f.typeInfo.Types[t.Rhs[0]]; ok {
+					if tv, ok := goFile.typeInfo.Types[t.Rhs[0]]; ok {
 						if tuple, ok := tv.Type.(*types.Tuple); ok {
 							for _, returnIndex := range ignoredReturnIndex {
 								if returnIndex <= tuple.Len() && tuple.At(returnIndex).Type().String() == errorType {
-									f.AddViolation(t.Pos(), ERROR_IGNORED)
+									goFile.AddViolation(
+										t.Pos(),
+										ERROR_IGNORED,
+										fmt.Sprint("Never ignore erros, ignoring them can lead to program crashes!"),
+									)
 									return false
 								}
 							}
@@ -314,15 +436,23 @@ func (f *file) detectIgnoredErrors() {
 
 		case *ast.CallExpr:
 			if !ignored {
-				if tv, ok := f.typeInfo.Types[t]; ok {
+				if tv, ok := goFile.typeInfo.Types[t]; ok {
 					if name, ok := tv.Type.(*types.Named); ok {
 						if name.String() == errorType {
-							f.AddViolation(t.Pos(), ERROR_IGNORED)
+							goFile.AddViolation(
+								t.Pos(),
+								ERROR_IGNORED,
+								fmt.Sprint("Never ignore erros, ignoring them can lead to program crashes!"),
+							)
 						}
 					} else if tuple, ok := tv.Type.(*types.Tuple); ok {
 						for i := 0; i < tuple.Len(); i++ {
 							if tuple.At(i).Type().String() == errorType {
-								f.AddViolation(t.Pos(), ERROR_IGNORED)
+								goFile.AddViolation(
+									t.Pos(),
+									ERROR_IGNORED,
+									fmt.Sprint("Never ignore erros, ignoring them can lead to program crashes!"),
+								)
 							}
 						}
 					}
@@ -334,58 +464,31 @@ func (f *file) detectIgnoredErrors() {
 	})
 }
 
-func (goFile *file) detectStringMethodCallingItself() {
+// TODO.
+func (goFile *GoFile) detectStringMethodCallingItself() {
 	goFile.walk(func(node ast.Node) bool {
 		return true
 	})
 }
 
-func (goFile *file) detectStaticCondition() {
+// TODO.
+func (goFile *GoFile) detectStaticCondition() {
 	goFile.walk(func(node ast.Node) bool {
 		//TODO
 		return true
 	})
 }
 
-func (goFile *file) detectEarlyReturn() {
-	goFile.walk(func(node ast.Node) bool {
-
-		if funcDecl, ok := node.(*ast.FuncDecl); ok {
-			bodyLength := len(funcDecl.Body.List) - 1
-			for index, bodyStmt := range funcDecl.Body.List {
-
-				if _, ok := bodyStmt.(*ast.ReturnStmt); ok && bodyLength > index {
-					goFile.AddViolation(bodyStmt.Pos(), EARLY_RETURN)
-					return false
-				}
-			}
-		}
-		return true
-	})
-}
-
-func (goFile *file) detectReturnBeforeElse() {
-	goFile.walk(func(node ast.Node) bool {
-		if ifStmt, ok := node.(*ast.IfStmt); ok {
-			bodyLength := len(ifStmt.Body.List) - 1
-
-			if ifStmt.Else != nil && bodyLength >= 0 {
-				if retStmt, ok := ifStmt.Body.List[bodyLength].(*ast.ReturnStmt); ok {
-					goFile.AddViolation(retStmt.Pos(), NO_ELSE_RETURN)
-				}
-			}
-		}
-		return true
-	})
-}
-
-func (goFile *file) detectBufferNotFlushed() {
+//TODO : Is it possible to actually do this without escape analysis?
+func (goFile *GoFile) detectBufferNotFlushed() {
 	goFile.walk(func(node ast.Node) bool {
 		// TODO
 		return true
 	})
 }
 
+// ruleIgnored inspects the commentGroup after a @SuppressRule("RULE_NAME") annotation
+// corresponding to the ruleToIgnore specified. Return TRUE if found, ELSE otherwise.
 func ruleIgnored(ruleToIgnore Rule, commentGroup *ast.CommentGroup) bool {
 	suppressRule := regexp.MustCompile(`@SuppressRule\("(?P<Rule>\S+)"\)`)
 	if commentGroup != nil {

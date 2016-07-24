@@ -5,12 +5,14 @@ package main
 
 import "fmt"
 
-func main() { // BB #0 ending.
+func main() {
+	// BB #0 ending.
 	month := 10
 	fmt.Printf("Month %d is %s\n", month, monthNumberToString(month))
 } // BB #1 ending.
 
-func monthNumberToString(month int) string { // BB #2 ending
+func monthNumberToString(month int) string {
+	// BB #2 ending
 	switch month { // BB #3 ending.
 	case 1:
 		return "January" // BB #4 ending.

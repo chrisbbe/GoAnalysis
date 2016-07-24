@@ -4,7 +4,7 @@
 package graph_test
 
 import (
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 	"testing"
 )
 
@@ -174,7 +174,7 @@ func TestDepthFirstSearchInGraph(t *testing.T) {
 	graph.InsertEdge(&f, &h)
 
 	expectedDepthFirstSearch := graph.GetDFS()
-	correctDfs := []Letter{Letter{"A"}, Letter{"B"}, Letter{"D"}, Letter{"C"}, Letter{"E"}, Letter{"G"}, Letter{"F"}, Letter{"H"}}
+	correctDfs := []Letter{{"A"}, {"B"}, {"D"}, {"C"}, {"E"}, {"G"}, {"F"}, {"H"}}
 
 	//Equal length.
 	if len(correctDfs) != len(expectedDepthFirstSearch) {
@@ -212,7 +212,7 @@ func TestDepthFirstSearchInCycleGraph(t *testing.T) {
 
 	expectedDepthFirstSearch := directGraph.GetDFS()
 	correctDepthFirstSearch := []Letter{
-		Letter{"A"}, Letter{"B"}, Letter{"D"}, Letter{"F"}, Letter{"E"}, Letter{"C"}, Letter{"G"},
+		{"A"}, {"B"}, {"D"}, {"F"}, {"E"}, {"C"}, {"G"},
 	}
 
 	//Compare DFS with correct DFS.
@@ -254,22 +254,22 @@ func TestStronglyConnectedComponentsInGraph(t *testing.T) {
 
 	expectedStronglyConnectedComponents := directedGraph.GetSCComponents()
 	correctStronglyConnectedComponents := []*graph.StronglyConnectedComponent{
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"F"}},
-				&graph.Node{Value: Letter{"G"}},
+				{Value: Letter{"F"}},
+				{Value: Letter{"G"}},
 			}},
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"H"}},
-				&graph.Node{Value: Letter{"C"}},
-				&graph.Node{Value: Letter{"D"}},
+				{Value: Letter{"H"}},
+				{Value: Letter{"C"}},
+				{Value: Letter{"D"}},
 			}},
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"B"}},
-				&graph.Node{Value: Letter{"A"}},
-				&graph.Node{Value: Letter{"E"}},
+				{Value: Letter{"B"}},
+				{Value: Letter{"A"}},
+				{Value: Letter{"E"}},
 			}},
 	}
 
@@ -280,7 +280,7 @@ func TestStronglyConnectedComponentsInGraph(t *testing.T) {
 	}
 
 	if !sccExists(correctStronglyConnectedComponents, expectedStronglyConnectedComponents) {
-		t.Errorf("Not all SCC exists")
+		t.Error("Not all SCC exists")
 	}
 
 }
@@ -311,25 +311,25 @@ func TestStronglyConnectedComponentsInGraph2(t *testing.T) {
 
 	expectedStronglyConnectedComponents := directedGraph.GetSCComponents()
 	correctStronglyConnectedComponents := []*graph.StronglyConnectedComponent{
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"D"}},
+				{Value: Letter{"D"}},
 			}},
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"C"}},
-				&graph.Node{Value: Letter{"G"}},
+				{Value: Letter{"C"}},
+				{Value: Letter{"G"}},
 			}},
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"A"}},
-				&graph.Node{Value: Letter{"B"}},
-				&graph.Node{Value: Letter{"E"}},
-				&graph.Node{Value: Letter{"F"}},
+				{Value: Letter{"A"}},
+				{Value: Letter{"B"}},
+				{Value: Letter{"E"}},
+				{Value: Letter{"F"}},
 			}},
-		&graph.StronglyConnectedComponent{
+		{
 			Nodes: []*graph.Node{
-				&graph.Node{Value: Letter{"H"}},
+				{Value: Letter{"H"}},
 			}},
 	}
 
@@ -340,6 +340,6 @@ func TestStronglyConnectedComponentsInGraph2(t *testing.T) {
 	}
 
 	if !sccExists(correctStronglyConnectedComponents, expectedStronglyConnectedComponents) {
-		t.Errorf("Not all SCC exists")
+		t.Error("Not all SCC exists")
 	}
 }

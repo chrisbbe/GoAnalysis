@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+// actualViolation is a type used in testing, to represent correct violation
+// that should be detected.
 type actualViolation struct {
 	SrcLine int
 	Type    linter.Rule
@@ -41,12 +43,12 @@ func TestDetectionOfPrintingFromFmtPackage(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 10, Type: linter.FMT_PRINTING},
-		actualViolation{SrcLine: 11, Type: linter.FMT_PRINTING},
-		actualViolation{SrcLine: 12, Type: linter.FMT_PRINTING},
+		{SrcLine: 10, Type: linter.FMT_PRINTING},
+		{SrcLine: 11, Type: linter.FMT_PRINTING},
+		{SrcLine: 12, Type: linter.FMT_PRINTING},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -56,14 +58,14 @@ func TestDetectionOfPrintingFromFmtPackage(t *testing.T) {
 func TestDetectionOfAllocatingMapWithNew(t *testing.T) {
 	expectedViolations, _ := linter.DetectViolations("./testcode/_newmap.go")
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 11, Type: linter.MAP_ALLOCATED_WITH_NEW},
+		{SrcLine: 11, Type: linter.MAP_ALLOCATED_WITH_NEW},
 	}
 
 	if len(expectedViolations) != len(actualViolations) {
 		t.Fatalf("Number of Violations should be %d, not %d!\n", len(actualViolations), len(expectedViolations))
 	}
 
-	for index, expectedMistake := range expectedViolations {
+	for index, expectedMistake := range expectedViolations[0].Violations {
 		if actualViolations[index].Type != expectedMistake.Type {
 			t.Errorf("Error should be of type %s, and not type %s!\n", actualViolations[index].Type, expectedMistake.Type)
 		}
@@ -83,10 +85,10 @@ func TestDetectionOfRacesInLoopClosures(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 18, Type: linter.RACE_CONDITION},
+		{SrcLine: 18, Type: linter.RACE_CONDITION},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -100,10 +102,10 @@ func TestDetectionOfEmptyIfBody(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 11, Type: linter.EMPTY_IF_BODY},
+		{SrcLine: 11, Type: linter.EMPTY_IF_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -117,10 +119,10 @@ func TestDetectionOfEmptyElseBody(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 16, Type: linter.EMPTY_ELSE_BODY},
+		{SrcLine: 16, Type: linter.EMPTY_ELSE_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -134,15 +136,15 @@ func TestDetectionOfEmptyForBody(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 8, Type: linter.EMPTY_FOR_BODY},
+		{SrcLine: 8, Type: linter.EMPTY_FOR_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// Testing rule: EARLY_RETURN
+// Testing rule: RETURN_KILLS_CODE
 // One should never return unconditionally, except from the last statement in a func or method.
 func TestDetectionOfEarlyReturn(t *testing.T) {
 	expectedViolations, err := linter.DetectViolations("./testcode/_earlyreturn.go")
@@ -151,10 +153,10 @@ func TestDetectionOfEarlyReturn(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 13, Type: linter.EARLY_RETURN},
+		{SrcLine: 13, Type: linter.RETURN_KILLS_CODE},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -168,11 +170,11 @@ func TestDetectionOfReturnBeforeElse(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 14, Type: linter.NO_ELSE_RETURN},
-		actualViolation{SrcLine: 22, Type: linter.NO_ELSE_RETURN},
+		{SrcLine: 14, Type: linter.RETURN_KILLS_CODE},
+		{SrcLine: 22, Type: linter.RETURN_KILLS_CODE},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -187,10 +189,10 @@ func TestDetectionOfGoTo(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 12, Type: linter.GOTO_USED},
+		{SrcLine: 12, Type: linter.GOTO_USED},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -205,18 +207,16 @@ func TestDetectionOfLabeledBranching(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 15, Type: linter.GOTO_USED},
+		{SrcLine: 15, Type: linter.GOTO_USED},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// TODO: Implement a solution for this unit tests.
-/*
 // Testing rule: ERROR_IGNORED
-// Errors should never be ignored.
+// Errors should never be ignored, might lead to program crashes.
 func TestDetectionOfIgnoredErrors(t *testing.T) {
 	expectedViolations, err := linter.DetectViolations("./testcode/_ignoreerror.go")
 	if err != nil {
@@ -224,19 +224,20 @@ func TestDetectionOfIgnoredErrors(t *testing.T) {
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 16, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 17, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 22, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 27, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 30, Type: linter.ERROR_IGNORED},
-		actualViolation{SrcLine: 46, Type: linter.ERROR_IGNORED},
+		{SrcLine: 16, Type: linter.ERROR_IGNORED},
+		{SrcLine: 17, Type: linter.ERROR_IGNORED},
+		{SrcLine: 22, Type: linter.ERROR_IGNORED},
+		{SrcLine: 27, Type: linter.ERROR_IGNORED},
+		{SrcLine: 30, Type: linter.ERROR_IGNORED},
+		{SrcLine: 46, Type: linter.ERROR_IGNORED},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
 
+/*
 // Testing rule: STRING_METHOD_DEFINES_ITSELF
 func TestDetectionOfStringMethodDefiningItself(t *testing.T) {
 	expectedViolations, err := linter.DetectViolations("./testcode/_stringmethod.go")
@@ -299,4 +300,5 @@ func TestDetectionOfNotFlushingBufferedWriter(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
 */

@@ -20,8 +20,6 @@ func swap(a, b interface{}) (c, d interface{}) {
 	return
 }
 
-// TODO: Remove this annotations
-// @SuppressRule("CONDITION_EVALUATED_STATICALLY")
 func getBiggest(a, b float32) float32 {
 	if a > b {
 		return a

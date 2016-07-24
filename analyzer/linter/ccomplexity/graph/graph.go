@@ -6,8 +6,8 @@ package graph
 import (
 	"bytes"
 	"fmt"
-	"github.com/chrisbbe/GoAnalysis/analyzer/ccomplexity/graph/stack"
 	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph/stack"
 	"io"
 	"os"
 	"os/exec"
