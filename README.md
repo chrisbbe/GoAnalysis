@@ -4,6 +4,22 @@
 
 Analyse your Go source code to detect for typical common mistakes in Go and for high values of cyclomatic complecity in your code.
 
+## Install
+
+Requierements:
+Go must be installed and $GOPATH have to be set correctly.  
+
+`$ go get github.com/chrisbbe/GoAnalysis/analyzer`
+
+
+## Execution
+
+`$analyzer -dir="$GOPATH/src/github.com/chrisbbe/GoAnalysis"`
+
+Exchange the example dir with the package you want to analyze.
+
+
+
 ## Tests
 
 GoAnalysis is developed using the Test-driven development (TDD) process where unit tests are extensively used to guarantee for the functionality in each package and the hole analysis as a unit.
