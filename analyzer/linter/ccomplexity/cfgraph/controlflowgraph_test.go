@@ -9,6 +9,7 @@ import (
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/cfgraph"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 	"io/ioutil"
+	"log"
 	"testing"
 )
 
@@ -98,7 +99,7 @@ func TestSimpleControlFlowGraph(t *testing.T) {
 	EXIT := bblock.NewBasicBlock(-1, bblock.EXIT, 0)
 
 	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
-	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 10)
+	BB1 := bblock.NewBasicBlock(1, bblock.RETURN_STMT, 11)
 
 	BB0.AddSuccessorBlock(BB1)
 
@@ -288,6 +289,9 @@ func TestGreatestCommonDivisorControlFlowGraph(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	log.Println("## EXPECTED BASIC-BLOCKS ##")
+	bblock.PrintBasicBlocks(basicBlocks)
+
 	expectedGraphs := cfgraph.GetControlFlowGraph(basicBlocks)
 	correctGraph := []*graph.Graph{
 		graph.NewGraph(), // func 'gcd'
@@ -298,15 +302,15 @@ func TestGreatestCommonDivisorControlFlowGraph(t *testing.T) {
 	START0 := bblock.NewBasicBlock(-1, bblock.START, 0)
 	EXIT0 := bblock.NewBasicBlock(-1, bblock.EXIT, 0)
 	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
-	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 9)
-	BB2 := bblock.NewBasicBlock(2, bblock.FOR_BODY, 11)
-	BB3 := bblock.NewBasicBlock(3, bblock.RETURN_STMT, 12)
+	BB1 := bblock.NewBasicBlock(1, bblock.FOR_STATEMENT, 10)
+	BB2 := bblock.NewBasicBlock(2, bblock.FOR_BODY, 13)
+	BB3 := bblock.NewBasicBlock(3, bblock.RETURN_STMT, 14)
 
 	// Function 'main'
 	START1 := bblock.NewBasicBlock(-1, bblock.START, 0)
 	EXIT1 := bblock.NewBasicBlock(-1, bblock.EXIT, 0)
-	BB4 := bblock.NewBasicBlock(4, bblock.FUNCTION_ENTRY, 15)
-	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 18)
+	BB4 := bblock.NewBasicBlock(4, bblock.FUNCTION_ENTRY, 17)
+	BB5 := bblock.NewBasicBlock(5, bblock.RETURN_STMT, 21)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
