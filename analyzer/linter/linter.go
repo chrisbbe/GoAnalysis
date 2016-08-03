@@ -4,6 +4,7 @@
 package linter
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -14,9 +15,14 @@ import (
 	"go/token"
 	"go/types"
 	"io/ioutil"
+	"log"
+	"os"
 	"regexp"
 	"runtime/debug"
+	"strings"
 )
+
+const CC_LIMIT = 10 // Upper limit of cyclomatic complexity measures.
 
 type Rule int
 
@@ -24,7 +30,7 @@ type Rule int
 const (
 	RACE_CONDITION Rule = iota
 	FMT_PRINTING
-	STRING_DEFINES_ITSELF
+	STRING_CALLS_ITSELF
 	MAP_ALLOCATED_WITH_NEW
 	ERROR_IGNORED
 	EMPTY_IF_BODY
@@ -41,7 +47,7 @@ const (
 var ruleStrings = map[Rule]string{
 	RACE_CONDITION:                 "RACE_CONDITION",
 	FMT_PRINTING:                   "FMT_PRINTING",
-	STRING_DEFINES_ITSELF:          "STRING_DEFINES_ITSELF",
+	STRING_CALLS_ITSELF:            "STRING_CALLS_ITSELF",
 	MAP_ALLOCATED_WITH_NEW:         "MAP_ALLOCATED_WITH_NEW",
 	ERROR_IGNORED:                  "ERROR_IGNORED",
 	EMPTY_IF_BODY:                  "EMPTY_IF_BODY",
@@ -56,8 +62,10 @@ var ruleStrings = map[Rule]string{
 }
 
 type GoFile struct {
-	FilePath   string
-	Violations []*Violation
+	FilePath        string
+	LinesOfCode     int
+	LinesOfComments int
+	Violations      []*Violation
 
 	goSrcFile  []byte
 	goFileNode *ast.File
@@ -94,14 +102,36 @@ func DetectViolations(goSrcFiles ...string) (goFileViolations []*GoFile, err err
 			FilePath:  goSrcFile,
 		}
 
-		goFile.measureCyclomaticComplexity(10)
+		goFile.measureCyclomaticComplexity(CC_LIMIT)
 		goFile.detectBugsAndCodeSmells()
 
 		if len(goFile.Violations) > 0 {
+			goFile.countLinesInFile() // No point in detecting number of lines if 'goFile' is not part of the result!
 			goFileViolations = append(goFileViolations, goFile)
 		}
 	}
 	return goFileViolations, nil
+}
+
+// countLinesInFile counts number of lines which are code and comments and returns the result.
+func (goFile *GoFile) countLinesInFile() {
+	file, err := os.Open(goFile.FilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if len(scanner.Text()) > 0 {
+			line := strings.TrimSpace(scanner.Text())
+			if strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") || strings.HasPrefix(line, "*/") {
+				goFile.LinesOfComments++
+			} else {
+				goFile.LinesOfCode++
+			}
+		}
+	}
 }
 
 func (goFile *GoFile) measureCyclomaticComplexity(upperLimit int) error {
@@ -131,7 +161,7 @@ func (goFile *GoFile) detectBugsAndCodeSmells() error {
 		return err
 	}
 
-	// Visit() method may panic()
+	// Visit() method may panic(), print stacktrace.
 	defer func() {
 		if r := recover(); r != nil {
 			debug.PrintStack()
@@ -173,13 +203,13 @@ func (goFile *GoFile) Analyse() {
 	goFile.detectRaceInGoRoutine()
 	goFile.detectIgnoredErrors()
 	goFile.detectStaticCondition()
-	goFile.detectStringMethodCallingItself()
+	goFile.detectRecursiveStringMethods()
 	goFile.detectReturnKillingCode()
 	goFile.detectBufferNotFlushed()
 }
 
 func (violation *Violation) String() string {
-	return fmt.Sprintf("%s on line %d", violation.Type, violation.SrcLine)
+	return fmt.Sprintf("%s on line %d - %s.", violation.Type, violation.SrcLine, violation.Description)
 }
 
 type walker func(ast.Node) bool
@@ -364,17 +394,19 @@ func (goFile *GoFile) detectReturnKillingCode() {
 	goFile.walk(func(node ast.Node) bool {
 
 		if funcDecl, ok := node.(*ast.FuncDecl); ok {
-			bodyLength := len(funcDecl.Body.List) - 1
-			for index, bodyStmt := range funcDecl.Body.List {
+			if funcDecl.Body != nil {
+				bodyLength := len(funcDecl.Body.List) - 1
+				for index, bodyStmt := range funcDecl.Body.List {
 
-				if _, ok := bodyStmt.(*ast.ReturnStmt); ok && bodyLength > index {
-					goFile.AddViolation(
-						bodyStmt.Pos(),
-						RETURN_KILLS_CODE,
-						fmt.Sprint("Code is dead because of return! There is no possible execution path to the code below in "+
-							"this scope!"),
-					)
-					return false
+					if _, ok := bodyStmt.(*ast.ReturnStmt); ok && bodyLength > index {
+						goFile.AddViolation(
+							bodyStmt.Pos(),
+							RETURN_KILLS_CODE,
+							fmt.Sprint("Code is dead because of return! There is no possible execution path to the code below in "+
+								"this scope!"),
+						)
+						return false
+					}
 				}
 			}
 		} else if ifStmt, ok := node.(*ast.IfStmt); ok {
@@ -399,11 +431,16 @@ func (goFile *GoFile) detectReturnKillingCode() {
 func (goFile *GoFile) detectIgnoredErrors() {
 	errorType := "error"
 	ignored := false
+	var returnResults []ast.Expr
 
 	goFile.walk(func(node ast.Node) bool {
 		switch t := node.(type) {
 		case *ast.FuncDecl:
 			ignored = ruleIgnored(ERROR_IGNORED, t.Doc)
+
+		case *ast.ReturnStmt:
+			// Hold the list of return result expressions.
+			returnResults = t.Results
 
 		case *ast.AssignStmt:
 			if !ignored {
@@ -436,6 +473,18 @@ func (goFile *GoFile) detectIgnoredErrors() {
 
 		case *ast.CallExpr:
 			if !ignored {
+				// Loop through return result expression to check whether CallExpr is part of return.
+				// Flagging errors not assigned to variable in return statement is wrong!
+				for _, returnResult := range returnResults {
+					if returnCallExpr, ok := returnResult.(*ast.CallExpr); ok {
+						if returnCallExpr == t {
+							// Call Expression is in return, stop looking after calls on functions returning error.
+							return false
+						}
+					}
+				}
+
+				// CallExpr is not part of return result, check further!
 				if tv, ok := goFile.typeInfo.Types[t]; ok {
 					if name, ok := tv.Type.(*types.Named); ok {
 						if name.String() == errorType {
@@ -444,6 +493,7 @@ func (goFile *GoFile) detectIgnoredErrors() {
 								ERROR_IGNORED,
 								fmt.Sprint("Never ignore erros, ignoring them can lead to program crashes!"),
 							)
+							return false
 						}
 					} else if tuple, ok := tv.Type.(*types.Tuple); ok {
 						for i := 0; i < tuple.Len(); i++ {
@@ -453,6 +503,7 @@ func (goFile *GoFile) detectIgnoredErrors() {
 									ERROR_IGNORED,
 									fmt.Sprint("Never ignore erros, ignoring them can lead to program crashes!"),
 								)
+								return false
 							}
 						}
 					}
@@ -465,8 +516,9 @@ func (goFile *GoFile) detectIgnoredErrors() {
 }
 
 // TODO.
-func (goFile *GoFile) detectStringMethodCallingItself() {
+func (goFile *GoFile) detectRecursiveStringMethods() {
 	goFile.walk(func(node ast.Node) bool {
+
 		return true
 	})
 }

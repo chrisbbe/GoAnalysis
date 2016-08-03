@@ -302,3 +302,21 @@ func TestDetectionOfNotFlushingBufferedWriter(t *testing.T) {
 }
 
 */
+
+// Issue #4 list a scenario where the tool detects a false positive of rule ERROR_IGNORED.
+// This test verifies correction of the behaviour.
+func TestDetectionOfErrorIgnoredInReturn(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/_errorinreturn.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{}
+
+	if len(expectedViolations) > 0 {
+		// Only verify violations of there is more than one file containing violations!
+		if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
