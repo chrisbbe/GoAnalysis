@@ -1,0 +1,129 @@
+<go-rules>
+    <rule>
+        <key>CYCLOMATIC_COMPLEXITY</key>
+        <name>Methods and functions should not be too complex</name>
+        <internalKey>CYCLOMATIC_COMPLEXITY</internalKey>
+        <description>The cyclomatic complexity of methods should not exceed a defined threshold.
+            Complex code can perform poorly and will in any case be difficult to understand and therefore to maintain.
+        </description>
+        <severity>MAJOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>brain-overload</tag>
+    </rule>
+    <rule>
+        <key>FMT_PRINTING</key>
+        <name>Printing from the fmt package.</name>
+        <internalKey>FMT_PRINTING</internalKey>
+        <description>Printing directly to stdout is not synchronized among Goroutines and might clog the
+            standard output
+        </description>
+        <severity>INFO</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>MAP_ALLOCATED_WITH_NEW</key>
+        <name>Map allocated with new()</name>
+        <internalKey>MAP_ALLOCATED_WITH_NEW</internalKey>
+        <description>Maps are allocated, not initialized with new(). Use make() to allocate and initialize
+            the map.
+        </description>
+        <severity>CRITICAL</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bug</tag>
+    </rule>
+    <rule>
+        <key>EMPTY_IF_BODY</key>
+        <name>If statement has empty body.</name>
+        <internalKey>EMPTY_IF_BODY</internalKey>
+        <description>An empty If statement body does nothing.</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>EMPTY_ELSE_BODY</key>
+        <name>Else statement has empty body.</name>
+        <internalKey>EMPTY_ELSE_BODY</internalKey>
+        <description>An empty Else statement body does nothing.</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>EMPTY_FOR_BODY</key>
+        <name>For statement has empty body.</name>
+        <internalKey>EMPTY_FOR_BODY</internalKey>
+        <description>An empty For statement body does nothing.</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>GOTO_USED</key>
+        <name>For statement has empty body.</name>
+        <internalKey>GOTO_USED</internalKey>
+        <description>Usage of GOTO statements might lead to spaghetti code.</description>
+        <severity>MAJOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>RACE_CONDITION</key>
+        <name>Goroutines on loop iterator variables creates races</name>
+        <internalKey>RACE_CONDITION</internalKey>
+        <description>Goroutines on loop iterator variables creates races.</description>
+        <severity>BLOCKER</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bug</tag>
+    </rule>
+    <rule>
+        <key>RETURN_KILLS_CODE</key>
+        <name>.</name>
+        <internalKey>RETURN_KILLS_CODE</internalKey>
+        <description>Goroutines on loop iterator variables creates races.</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>ERROR_IGNORED</key>
+        <name>Error ignored</name>
+        <internalKey>ERROR_IGNORED</internalKey>
+        <description>Never ignore errors, ingoring them can lead to program crashes!</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+    <rule>
+        <key>STRING_CALLS_ITSELF</key>
+        <name>String() method calls itself.</name>
+        <internalKey>STRING_DEFINES_ITSELF</internalKey>
+        <description>String() method calls itself by using format functions with %v or %s directly on the method type.
+        </description>
+        <severity>BLOCKER</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bug</tag>
+    </rule>
+    <rule>
+        <key>CONDITION_EVALUATED_STATICALLY</key>
+        <name>Condition can be evaluated statically.</name>
+        <internalKey>CONDITION_EVALUATED_STATICALLY</internalKey>
+        <description>There is no need to evaluate condition that clearly are false or true.</description>
+        <severity>MINOR</severity>
+        <cardinality>SINGLE</cardinality>
+        <status>READY</status>
+        <tag>bad-practice</tag>
+    </rule>
+</go-rules>
