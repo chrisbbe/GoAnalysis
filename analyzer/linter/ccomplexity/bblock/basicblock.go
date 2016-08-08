@@ -62,7 +62,7 @@ func (bbType BasicBlockType) String() string {
 }
 
 func (basicBlock *BasicBlock) UID() string {
-	//Both START and EXIT blocks are meta-blocks, giving them negative UID.
+	//Both START and EXIT blocks are meta-blocks, giving them negative UID which will not be confused with 'real' blocks.
 	if basicBlock.Type == START || basicBlock.Type == EXIT {
 		return fmt.Sprintf("%d", 0-basicBlock.Type)
 	}
@@ -180,11 +180,11 @@ func (v *visitor) GetBasicBlocks() []*BasicBlock {
 	return basicBlocks
 }
 
-func GetBasicBlocksFromSourceCode(srcFile []byte) ([]*BasicBlock, error) {
+func GetBasicBlocksFromSourceCode(filePath string, srcFile []byte) ([]*BasicBlock, error) {
 	fileSet := token.NewFileSet()
-	file, err := parser.ParseFile(fileSet, "", srcFile, 0)
+	file, err := parser.ParseFile(fileSet, filePath, srcFile, parser.ParseComments|parser.AllErrors)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Parse error: %s", err)
 	}
 
 	visitor := &visitor{sourceFileSet: fileSet, basicBlocks: make(map[int]*BasicBlock)}
@@ -239,19 +239,21 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 			funcDeclBlock.FunctionName = t.Name.Name
 			funcDeclBlock.FunctionDeclLine = v.sourceFileSet.File(t.Pos()).Line(t.Pos())
 
-			for _, s := range t.Body.List {
-				if _, ok := s.(*ast.ReturnStmt); ok {
-					v.returnBlock = v.AddBasicBlock(RETURN_STMT, s.End())
+			if t.Body != nil {
+				for _, s := range t.Body.List {
+					if _, ok := s.(*ast.ReturnStmt); ok {
+						v.returnBlock = v.AddBasicBlock(RETURN_STMT, s.End())
+					}
 				}
-			}
 
-			if v.returnBlock == nil {
-				v.returnBlock = v.AddBasicBlock(RETURN_STMT, t.End())
-			}
+				if v.returnBlock == nil {
+					v.returnBlock = v.AddBasicBlock(RETURN_STMT, t.End())
+				}
 
-			//Visit all statements in body.
-			for _, s := range t.Body.List {
-				v.Visit(s)
+				//Visit all statements in body.
+				for _, s := range t.Body.List {
+					v.Visit(s)
+				}
 			}
 
 			v.returnBlock = nil
@@ -443,7 +445,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 			//TODO: Special case.
 			//TODO: Type is always CASE_CLAUSE type
 			if v.returnBlock != nil && caseClause.Type != RETURN_STMT && caseClause.Type != SWITCH_STATEMENT {
-				//TODO: This must be refactored more beautiful
+				//TODO: This must be refactored more beautifully
 				containsForStatement := false
 				for _, b := range caseClause.GetSuccessorBlocks() {
 					if b.Type == FOR_STATEMENT {
@@ -454,7 +456,6 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 					caseClause.AddSuccessorBlock(v.returnBlock)
 				}
 			}
-
 		}
 	}
 	return v

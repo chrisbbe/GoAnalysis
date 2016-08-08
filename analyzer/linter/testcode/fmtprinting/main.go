@@ -5,6 +5,7 @@ package main
 
 import "fmt"
 
+// Unit-test, ignore other errors then what we are testing.
 // @SuppressRule("ERROR_IGNORED")
 func main() {
 	fmt.Print("Printing with fmt.Print()")

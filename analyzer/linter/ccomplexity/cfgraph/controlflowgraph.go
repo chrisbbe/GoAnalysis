@@ -86,10 +86,18 @@ func getControlFlowGraph(basicBlocks []*bblock.BasicBlock) *ControlFlowGraph {
 	controlFlowGraph := New()
 	var lastBlockAdded *bblock.BasicBlock
 
+	startNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.START, 0)}
+	exitNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.EXIT, 0)}
+
 	for _, basicBlock := range basicBlocks {
 		lastBlockAdded = basicBlock
 		basicBlockNode := &graph.Node{Value: basicBlock}
 		controlFlowGraph.InsertNode(basicBlockNode)
+
+		if basicBlock.Type == bblock.RETURN_STMT {
+			// RETURN_STMT terminates functior and methods, should therefor always have a edge to EXIT.
+			controlFlowGraph.InsertEdge(&graph.Node{Value: basicBlock}, exitNode)
+		}
 
 		for _, successorBlock := range basicBlock.GetSuccessorBlocks() {
 			controlFlowGraph.InsertEdge(basicBlockNode, &graph.Node{Value: successorBlock})
@@ -97,11 +105,11 @@ func getControlFlowGraph(basicBlocks []*bblock.BasicBlock) *ControlFlowGraph {
 		}
 	}
 
-	startNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.START, 0)}
-	exitNode := &graph.Node{Value: bblock.NewBasicBlock(-1, bblock.EXIT, 0)}
-
 	controlFlowGraph.InsertEdge(startNode, controlFlowGraph.Root)
-	controlFlowGraph.InsertEdge(&graph.Node{Value: lastBlockAdded}, exitNode)
+	if lastBlockAdded.Type != bblock.RETURN_STMT {
+		// Edge between RETURN_STMT and EXIT is already added higher up!
+		controlFlowGraph.InsertEdge(&graph.Node{Value: lastBlockAdded}, exitNode)
+	}
 	controlFlowGraph.InsertEdge(exitNode, startNode)
 
 	return controlFlowGraph

@@ -4,8 +4,8 @@
 package main
 
 import (
-	"log"
 	"errors"
+	"log"
 )
 
 func main() {

@@ -39,4 +39,5 @@ func monthNumberToString(month int) string {
 	case 12:
 		return "Desember" // BB #15 ending.
 	}
+	return "Unknown month"
 } // BB #16 ending.

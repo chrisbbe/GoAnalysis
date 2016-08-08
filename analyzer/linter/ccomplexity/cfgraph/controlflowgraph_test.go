@@ -9,7 +9,6 @@ import (
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/cfgraph"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 	"io/ioutil"
-	"log"
 	"testing"
 )
 
@@ -84,11 +83,12 @@ func VerifyBasicBlocks(expectedBasicBlocks []*bblock.BasicBlock, correctBasicBlo
 }
 
 func TestSimpleControlFlowGraph(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_simple.go")
+	filePath := "./testcode/_simple.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,11 +121,12 @@ func TestSimpleControlFlowGraph(t *testing.T) {
 }
 
 func TestIfElseControlFlowGraph(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_ifelse.go")
+	filePath := "./testcode/_ifelse.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,11 +136,11 @@ func TestIfElseControlFlowGraph(t *testing.T) {
 	START := bblock.NewBasicBlock(-1, bblock.START, 0)
 	EXIT := bblock.NewBasicBlock(-1, bblock.EXIT, 0)
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 11)
-	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 14)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 18)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 19)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 13)
+	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 16)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 20)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 23)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -168,11 +169,12 @@ func TestIfElseControlFlowGraph(t *testing.T) {
 }
 
 func TestForLoopControlFlowGraph(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_looper.go")
+	filePath := "./testcode/_looper.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,11 +215,12 @@ func TestForLoopControlFlowGraph(t *testing.T) {
 }
 
 func TestSwitchControlFlowGraph(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_switcher.go")
+	filePath := "./testcode/_switcher.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -268,6 +271,10 @@ func TestSwitchControlFlowGraph(t *testing.T) {
 	correctGraph[1].InsertEdge(&graph.Node{Value: BB3}, &graph.Node{Value: BB6})
 	correctGraph[1].InsertEdge(&graph.Node{Value: BB3}, &graph.Node{Value: BB7})
 	correctGraph[1].InsertEdge(&graph.Node{Value: BB3}, &graph.Node{Value: BB8})
+	correctGraph[1].InsertEdge(&graph.Node{Value: BB4}, &graph.Node{Value: EXIT})
+	correctGraph[1].InsertEdge(&graph.Node{Value: BB5}, &graph.Node{Value: EXIT})
+	correctGraph[1].InsertEdge(&graph.Node{Value: BB6}, &graph.Node{Value: EXIT})
+	correctGraph[1].InsertEdge(&graph.Node{Value: BB7}, &graph.Node{Value: EXIT})
 	correctGraph[1].InsertEdge(&graph.Node{Value: BB8}, &graph.Node{Value: EXIT})
 	correctGraph[1].InsertEdge(&graph.Node{Value: EXIT}, &graph.Node{Value: START})
 
@@ -280,17 +287,15 @@ func TestSwitchControlFlowGraph(t *testing.T) {
 }
 
 func TestGreatestCommonDivisorControlFlowGraph(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_gcd.go")
+	filePath := "./testcode/_gcd.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	basicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	log.Println("## EXPECTED BASIC-BLOCKS ##")
-	bblock.PrintBasicBlocks(basicBlocks)
 
 	expectedGraphs := cfgraph.GetControlFlowGraph(basicBlocks)
 	correctGraph := []*graph.Graph{

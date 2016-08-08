@@ -51,11 +51,12 @@ func verifyBasicBlocks(expectedBasicBlocks []*bblock.BasicBlock, correctBasicBlo
 }
 
 func TestEmptyFunctionBasicBlock(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_emptyfunction.go")
+	filePath := "./testcode/_emptyfunction.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,11 +74,12 @@ func TestEmptyFunctionBasicBlock(t *testing.T) {
 }
 
 func TestSingleBasicBlock(t *testing.T) {
-	sourceFile, err := ioutil.ReadFile("./testcode/_simple.go")
+	filePath := "./testcode/_simple.go"
+	sourceFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(sourceFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, sourceFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,20 +97,21 @@ func TestSingleBasicBlock(t *testing.T) {
 }
 
 func TestIfElseBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_ifelse.go")
+	filePath := "./testcode/_ifelse.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 11)
-	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 14)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 18)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 19)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 13)
+	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 16)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 20)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 24)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -125,20 +128,21 @@ func TestIfElseBasicBlock(t *testing.T) {
 }
 
 func TestIfElseWithReturn(t *testing.T) {
+	filePath := "./testcode/_ifelsereturn.go"
 	srcFile, err := ioutil.ReadFile("./testcode/_ifelsereturn.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 8)
-	BB2 := bblock.NewBasicBlock(2, bblock.RETURN_STMT, 10)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 13)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 14)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 10)
+	BB2 := bblock.NewBasicBlock(2, bblock.RETURN_STMT, 12)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 15)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 16)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -154,20 +158,21 @@ func TestIfElseWithReturn(t *testing.T) {
 }
 
 func TestIfElseIfBasicBlock(t *testing.T) {
+	filePath := "./testcode/_ifelseif.go"
 	srcFile, err := ioutil.ReadFile("./testcode/_ifelseif.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 6)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 10)
-	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 12)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 15)
-	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 19)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 7)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 11)
+	BB2 := bblock.NewBasicBlock(2, bblock.ELSE_CONDITION, 13)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_BODY, 16)
+	BB4 := bblock.NewBasicBlock(4, bblock.RETURN_STMT, 23)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB3)
@@ -184,23 +189,24 @@ func TestIfElseIfBasicBlock(t *testing.T) {
 }
 
 func TestNestedIfElseBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_nestedifelse.go")
+	filePath := "./testcode/_nestedifelse.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
-	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 11)
-	BB2 := bblock.NewBasicBlock(2, bblock.IF_CONDITION, 15)
-	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_CONDITION, 18)
-	BB4 := bblock.NewBasicBlock(4, bblock.ELSE_BODY, 21)
-	BB5 := bblock.NewBasicBlock(5, bblock.ELSE_CONDITION, 22)
-	BB6 := bblock.NewBasicBlock(6, bblock.ELSE_BODY, 25)
-	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 28)
+	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 11)
+	BB1 := bblock.NewBasicBlock(1, bblock.IF_CONDITION, 14)
+	BB2 := bblock.NewBasicBlock(2, bblock.IF_CONDITION, 18)
+	BB3 := bblock.NewBasicBlock(3, bblock.ELSE_CONDITION, 21)
+	BB4 := bblock.NewBasicBlock(4, bblock.ELSE_BODY, 25)
+	BB5 := bblock.NewBasicBlock(5, bblock.ELSE_CONDITION, 26)
+	BB6 := bblock.NewBasicBlock(6, bblock.ELSE_BODY, 30)
+	BB7 := bblock.NewBasicBlock(7, bblock.RETURN_STMT, 34)
 
 	BB0.AddSuccessorBlock(BB1)
 	BB1.AddSuccessorBlock(BB2, BB6)
@@ -220,11 +226,12 @@ func TestNestedIfElseBasicBlock(t *testing.T) {
 }
 
 func TestLooperBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_looper.go")
+	filePath := "./testcode/_looper.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,11 +255,12 @@ func TestLooperBasicBlock(t *testing.T) {
 }
 
 func TestSimpleSwitchBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_simpleswitch.go")
+	filePath := "./testcode/_simpleswitch.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,11 +290,12 @@ func TestSimpleSwitchBasicBlock(t *testing.T) {
 }
 
 func TestSwitchBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_switch.go")
+	filePath := "./testcode/_switch.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -319,11 +328,12 @@ func TestSwitchBasicBlock(t *testing.T) {
 }
 
 func TestReturnSwitcherBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_returnswitcher.go")
+	filePath := "./testcode/_returnswitcher.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -363,11 +373,12 @@ func TestReturnSwitcherBasicBlock(t *testing.T) {
 }
 
 func TestNestedSwitchBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_nestedswitch.go")
+	filePath := "./testcode/_nestedswitch.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,70 +415,13 @@ func TestNestedSwitchBasicBlock(t *testing.T) {
 	}
 }
 
-/*
-func TestNestedSwitchesBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_nestedswitches.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for index, bb := range expectedBasicBlocks {
-		log.Printf("%d) %s\n", index, bb)
-
-		for _, sbb := range bb.GetSuccessorBlocks() {
-			log.Printf("\t-> %s\n", sbb)
-		}
-	}
-
-	BB0 := bblock.NewBasicBlock(0, bblock.FUNCTION_ENTRY, 8)
-	BB1 := bblock.NewBasicBlock(1, bblock.SWITCH_STATEMENT, 13)
-	BB2 := bblock.NewBasicBlock(2, bblock.CASE_CLAUSE, 16)
-	BB3 := bblock.NewBasicBlock(3, bblock.SWITCH_STATEMENT, 19)
-	BB4 := bblock.NewBasicBlock(4, bblock.CASE_CLAUSE, 22)
-	BB5 := bblock.NewBasicBlock(5, bblock.CASE_CLAUSE, 24)
-	BB6 := bblock.NewBasicBlock(6, bblock.CASE_CLAUSE, 26)
-	BB7 := bblock.NewBasicBlock(7, bblock.CASE_CLAUSE, 28)
-	BB8 := bblock.NewBasicBlock(8, bblock.SWITCH_STATEMENT, 34)
-	BB9 := bblock.NewBasicBlock(9, bblock.CASE_CLAUSE, 37)
-	BB10 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 39)
-	BB11 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 41)
-	BB12 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 43)
-	BB13 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 47)
-	BB14 := bblock.NewBasicBlock(10, bblock.CASE_CLAUSE, 49)
-	BB15 := bblock.NewBasicBlock(10, bblock.RETURN_STMT, 51)
-
-	correctBasicBlocks := []*bblock.BasicBlock{
-		BB0, BB1, BB2, BB3, BB4, BB5, BB6, BB7, BB8, BB9, BB10, BB11, BB12, BB13, BB14, BB15,
-	}
-
-	BB0.AddSuccessorBlock(BB1)
-	BB1.AddSuccessorBlock(BB2, BB3, BB7, BB13, BB14, BB15)
-	BB2.AddSuccessorBlock(BB10)
-	BB3.AddSuccessorBlock(BB4, BB5, BB6, BB10)
-	BB4.AddSuccessorBlock(BB10)
-	BB5.AddSuccessorBlock(BB10)
-	BB6.AddSuccessorBlock(BB10)
-	BB7.AddSuccessorBlock(BB10)
-	BB8.AddSuccessorBlock(BB10)
-	BB9.AddSuccessorBlock(BB10)
-	BB8.AddSuccessorBlock(BB9, BB10, BB11, BB12)
-
-	if err := verifyBasicBlocks(expectedBasicBlocks, correctBasicBlocks); err != nil {
-		t.Fatal(err)
-	}
-}
-*/
-
 func TestTypeSwitchBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_typeswitch.go")
+	filePath := "./testcode/_typeswitch.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Error(err)
 	}
@@ -505,11 +459,12 @@ func TestTypeSwitchBasicBlock(t *testing.T) {
 }
 
 func TestSimpleLooperSwitch(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_simplelooperswitch.go")
+	filePath := "./testcode/_simplelooperswitch.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Error(err)
 	}
@@ -537,11 +492,12 @@ func TestSimpleLooperSwitch(t *testing.T) {
 }
 
 func TestSelectBasicBlock(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_select.go")
+	filePath := "./testcode/_select.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -570,11 +526,12 @@ func TestSelectBasicBlock(t *testing.T) {
 }
 
 func TestGreatestCommonDivisor(t *testing.T) {
+	filePath := "./testcode/_gcd.go"
 	srcFile, err := ioutil.ReadFile("./testcode/_gcd.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(srcFile)
+	expectedBasicBlocks, err := bblock.GetBasicBlocksFromSourceCode(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}

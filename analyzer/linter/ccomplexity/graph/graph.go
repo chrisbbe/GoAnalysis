@@ -73,10 +73,8 @@ func (n *Node) String() string {
 	return n.Value.String()
 }
 
-// InsertEdge inserts directed edge between
-// leftNode and rightNode. It also inserts
-// the node in the graph correctly if the
-// node does not already exist in the graph.
+// InsertEdge inserts directed edge between leftNode and rightNode. It also inserts the node in the graph correctly
+// if the node does not already exist in the graph.
 func (graph *Graph) InsertEdge(leftNode *Node, rightNode *Node) {
 	if len(graph.Nodes) == 0 {
 		graph.Root = leftNode
@@ -154,8 +152,12 @@ func (graph *Graph) dfs(v *Node) {
 
 	component := []*Node{}
 	var w interface{}
+	var err error
 	for ok := true; ok; ok = w.(*Node) != v {
-		w, _ = graph.stack.Pop()
+		w, err = graph.stack.Pop()
+		if err != nil {
+			panic(err)
+		}
 		component = append(component, w.(*Node))
 		w.(*Node).low = len(graph.Nodes) - 1
 	}
@@ -231,12 +233,14 @@ func (node *Node) GetInNodes() []*Node {
 
 // Draw writes the graph to file according to the Graphviz (www.graphviz.org) format
 // and tries to compile the graph to PDF by using dot.
-func (graph *Graph) Draw(name string) error {
+func (graph *Graph) Draw(name string) (err error) {
 	dottyFile, err := os.Create(name + ".dot")
 	if err != nil {
 		return err
 	}
-	defer dottyFile.Close()
+	defer func() {
+		err = dottyFile.Close()
+	}()
 
 	var content bytes.Buffer
 
@@ -249,13 +253,20 @@ func (graph *Graph) Draw(name string) error {
 	content.WriteString("/* --------------------------------------------------- */\n")
 
 	// Start writing the graph.
-	content.WriteString("digraph AST {\n")
+	if _, err := content.WriteString("digraph AST {\n"); err != nil {
+		return err
+	}
+
 	for _, node := range graph.Nodes {
 		for _, outNode := range node.GetOutNodes() {
-			content.WriteString(fmt.Sprintf("\t\"%s\" -> \"%s\";\n", node, outNode))
+			if _, err = content.WriteString(fmt.Sprintf("\t\"%s\" -> \"%s\";\n", node, outNode)); err != nil {
+				return err
+			}
 		}
 	}
-	content.WriteString("}\n")
+	if _, err := content.WriteString("}\n"); err != nil {
+		return err
+	}
 
 	if _, err := io.WriteString(dottyFile, content.String()); err != nil {
 		return err

@@ -3,6 +3,8 @@
 // be found in the LICENSE file.
 package main
 
+import "log"
+
 func main() {
 	// BB #0 ending.
 	t := 2 + 3
@@ -10,10 +12,12 @@ func main() {
 
 	if 2 < 3 {
 		// BB #1 ending.
-		v := 5 + 5
+		t = 5 + 5
 	} else {
 		// BB #2 ending.
-		w := 10 + 3
-		v := w - 4 // BB #3 ending.
+		u = 10 + 3
+		t = t - 4 // BB #3 ending.
 	}
+	log.Printf("t = %d\n", t)
+	log.Printf("u = %d\n", u)
 }

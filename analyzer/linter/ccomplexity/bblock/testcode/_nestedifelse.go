@@ -3,7 +3,10 @@
 // be found in the LICENSE file.
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func main() {
 	// BB #0 ending.
@@ -17,12 +20,15 @@ func main() {
 			fmt.Println("False")
 		} else {
 			// BB #3 ending.
-			i := 10 // BB #4 ending.
-		}
+			i := 10
+			log.Printf("i = %d\n", i)
+		}// BB #4 ending.
 	} else {
 		// BB #5 ending.
-		y := 5 // BB #6 ending.
-	}
+		y := 5
+		log.Printf("y = %d\n", y)
+	}// BB #6 ending.
 
-	x := 2 + 5 // BB #7 ending.
+	x := 2 + 5
+	log.Printf("x = %d\n", x) // BB #7 ending.
 }

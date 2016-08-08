@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/chrisbbe/GoAnalysis/analyzer/globalvars"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter"
 	"log"
 	"os"
@@ -26,54 +27,77 @@ func main() {
 		flag.Usage()
 	}
 
-	//var violations []*linter.GoFile
 	// Option dir selected.
 	if len(*sourceRootDir) > 0 {
 		start := time.Now()
 
-		if ok, err := pathExists(*sourceRootDir); ok {
-			goFiles, errors := getGoFiles(*sourceRootDir)
+		goPackageViolations, err := linter.DetectViolations(*sourceRootDir) // Start the analysis.
+		if err != nil {
+			log.Fatal(err)
+		}
+		timeUsed := time.Since(start)
 
-			for _, err := range errors {
-				if err != nil {
-					log.Fatal(err)
+		// Direct output to console as JSON.
+		if *jsonOutput && len(goPackageViolations) > 0 {
+
+			// Aggregate GoFiles to JSON marshalling.
+			violationsMap := make(map[string]*linter.GoFile)
+			for _, goPackage := range goPackageViolations {
+				for _, goFile := range goPackage.Violations {
+					if gf, ok := violationsMap[goFile.FilePath]; ok {
+						gf.Violations = append(gf.Violations, goFile.Violations...)
+					} else {
+						violationsMap[goFile.FilePath] = goFile
+					}
 				}
 			}
 
-			goFileViolations, err := linter.DetectViolations(goFiles...)
+			// Convert to list for JSON marshalling.
+			var violations []*linter.GoFile
+			for _, value := range violationsMap {
+				violations = append(violations, value)
+			}
+
+			json, err := json.MarshalIndent(violations, "", "\t")
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			// Direct output to console as JSON.
-			if *jsonOutput && len(goFileViolations) > 0 {
-				json, err := json.MarshalIndent(goFileViolations, "", "\t")
-				if err != nil {
-					log.Fatal(err)
-				}
-				os.Stdout.Write(json)
-			} else {
-				log.SetOutput(os.Stdout) // We want to send output to stdout, instead of Stderr.
-				numberOfViolations := 0
-				// Nicely print the output to the console.
-				log.Println("-----------------------------------------------------------------------------------------------")
-
-				for _, goFile := range goFileViolations {
-					log.Printf("Violations in %s :\n", goFile.FilePath)
-					numberOfViolations += len(goFile.Violations)
-
-					for i, violation := range goFile.Violations {
-						log.Printf("\t%d) %s (Line %d) - %s\n", i, violation.Type, violation.SrcLine, violation.Description)
-					}
-					log.Println("-----------------------------------------------------------------------------------------------")
-				}
-				log.Printf("Found total %d violations!\n", numberOfViolations)
-				log.Printf("Took %s\n", time.Since(start))
+			if _, err := os.Stdout.Write(json); err != nil {
+				panic(err)
 			}
 
 		} else {
-			log.Print(err)
+			log.SetOutput(os.Stdout) // We want to send output to stdout, instead of Stderr.
+			numberOfViolations := 0
+			linesOfCode := 0
+			linesOfComments := 0
+
+			// Nicely print the output to the console.
+			log.Println("-----------------------------------------------------------------------------------------------")
+			for _, goPackage := range goPackageViolations {
+				log.Printf("PACKAGE: %s (%s)", goPackage.Pack.Name, goPackage.Path)
+
+				for _, goFile := range goPackage.Violations {
+					log.Printf("\tViolations in %s :", filepath.Base(goFile.FilePath))
+					for i, vio := range goFile.Violations {
+						log.Printf("\t\t%d) %s\n", i, vio)
+					}
+					linesOfCode += goFile.LinesOfCode
+					linesOfComments += goFile.LinesOfComments
+				}
+
+				numberOfViolations += len(goPackage.Violations)
+				log.Println("-----------------------------------------------------------------------------------------------")
+			}
+			log.Println("## ANALYSIS SUMMARY ##")
+			log.Printf("Total %d violations found!\n", numberOfViolations)
+			log.Printf("Total number of Go files: %d\n", countGoFiles(*sourceRootDir))
+			log.Printf("Total lines of code (LOC): %d\n", linesOfCode)
+			log.Printf("Total lines of comments: %d\n", linesOfComments)
+			log.Printf("Total time used: %s\n", timeUsed)
+			log.Printf("For rule details: %s\n", globalvars.WIKI_PAGE)
 		}
+
 	}
 
 	// Print help.
@@ -83,28 +107,14 @@ func main() {
 }
 
 // getGoFiles searches recursively for .go files in the searchDir path, returning the absolute path to the files.
-func getGoFiles(searchDir string) (goFiles []string, errors []error) {
+func countGoFiles(searchDir string) (counter int) {
 	filepath.Walk(searchDir, func(pat string, file os.FileInfo, err error) error {
-		if err != nil {
-			errors = append(errors, err)
-		}
+
 		if file != nil && !file.IsDir() && file.Mode().IsRegular() && strings.EqualFold(path.Ext(file.Name()), ".go") {
 			// Only add if regular Go source-code file.
-			goFiles = append(goFiles, pat)
+			counter++
 		}
 		return nil
 	})
-	return goFiles, errors
-}
-
-// pathExists returns whether the given file or directory exists or not.
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, err
-	}
-	if os.IsNotExist(err) {
-		return false, err
-	}
-	return true, err
+	return
 }

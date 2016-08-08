@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/bblock"
 	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/cfgraph"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity/graph"
 )
 
 // FunctionComplexity represents cyclomatic complexity in a function or method.
@@ -34,12 +35,16 @@ func (function *FunctionComplexity) GetNumberOfSCC() int {
 	return function.ControlFlowGraph.GetNumberOfSCComponents()
 }
 
+func (function *FunctionComplexity) GetSCComponents() []*graph.StronglyConnectedComponent {
+	return function.ControlFlowGraph.GetSCComponents()
+}
+
 func GetCyclomaticComplexity(cfg *cfgraph.ControlFlowGraph) int {
 	return cfg.GetNumberOfEdges() - cfg.GetNumberOfNodes() + cfg.GetNumberOfSCComponents()
 }
 
-func GetCyclomaticComplexityFunctionLevel(goSrcFile []byte) (functions []*FunctionComplexity, err error) {
-	blocks, err := bblock.GetBasicBlocksFromSourceCode(goSrcFile)
+func GetCyclomaticComplexityFunctionLevel(goFilePath string, goSrcFile []byte) (functions []*FunctionComplexity, err error) {
+	blocks, err := bblock.GetBasicBlocksFromSourceCode(goFilePath, goSrcFile)
 	if err != nil {
 		return nil, err
 	}

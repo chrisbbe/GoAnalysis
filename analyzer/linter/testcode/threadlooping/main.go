@@ -14,21 +14,22 @@ import (
 //
 func main() {
 	//Not-thread safe.
-	for val := 0; val < 5; val++ {
+	for num := 0; num < 5; num++ {
 		go func() {
-			log.Println(val)
+			log.Printf("Goroutine #%d\n", num)
 		}()
 	}
 
-	//Safe for-loop, no Go routine!
-	for val := 0; val < 5; val++ {
+	//Safe loop, no Go routine!
+	for val := 0; val < 50; val++ {
 		log.Println(val)
 	}
 
-	//Thread safe for-loop.
+	//Thread safe loop.
 	for val := 0; val < 5; val++ {
 		go func(val int) {
 			log.Println(val)
 		}(val)
 	}
+
 }

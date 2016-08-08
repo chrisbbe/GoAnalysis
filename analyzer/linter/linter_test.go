@@ -37,18 +37,21 @@ func verifyViolations(expectedViolations []*linter.Violation, actualViolations [
 // Printing from fmt package is not thread safe and should be avoided in production and detected!
 // Testing rule: FMT_PRINTING
 func TestDetectionOfPrintingFromFmtPackage(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_fmtprinting.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/fmtprinting")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	actualViolations := []actualViolation{
-		{SrcLine: 10, Type: linter.FMT_PRINTING},
 		{SrcLine: 11, Type: linter.FMT_PRINTING},
 		{SrcLine: 12, Type: linter.FMT_PRINTING},
+		{SrcLine: 13, Type: linter.FMT_PRINTING},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -56,22 +59,16 @@ func TestDetectionOfPrintingFromFmtPackage(t *testing.T) {
 // Testing rule: NEVER_ALLOCATED_MAP_WITH_NEW
 // Allocating maps with new returns a nil pointer, therefor one should use make.
 func TestDetectionOfAllocatingMapWithNew(t *testing.T) {
-	expectedViolations, _ := linter.DetectViolations("./testcode/_newmap.go")
+	expectedViolations, _ := linter.DetectViolations("./testcode/newmap")
 	actualViolations := []actualViolation{
 		{SrcLine: 11, Type: linter.MAP_ALLOCATED_WITH_NEW},
 	}
 
-	if len(expectedViolations) != len(actualViolations) {
-		t.Fatalf("Number of Violations should be %d, not %d!\n", len(actualViolations), len(expectedViolations))
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
 	}
-
-	for index, expectedMistake := range expectedViolations[0].Violations {
-		if actualViolations[index].Type != expectedMistake.Type {
-			t.Errorf("Error should be of type %s, and not type %s!\n", actualViolations[index].Type, expectedMistake.Type)
-		}
-		if actualViolations[index].SrcLine != expectedMistake.SrcLine {
-			t.Errorf("Error should be found on line %d, and not on line %d!\n", actualViolations[index].SrcLine, expectedMistake.SrcLine)
-		}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
+		t.Fatal(err)
 	}
 
 }
@@ -79,7 +76,7 @@ func TestDetectionOfAllocatingMapWithNew(t *testing.T) {
 // Testing rule: RACE_CONDITION
 // Races will occur, since multiple Go-routines will share the same counter variable.
 func TestDetectionOfRacesInLoopClosures(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_threadlooping.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/threadlooping")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +85,10 @@ func TestDetectionOfRacesInLoopClosures(t *testing.T) {
 		{SrcLine: 18, Type: linter.RACE_CONDITION},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -96,7 +96,7 @@ func TestDetectionOfRacesInLoopClosures(t *testing.T) {
 // Testing rule: EMPTY_IF_BODY
 // Empty if-bodies are unnecessary and ineffective.
 func TestDetectionOfEmptyIfBody(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_emptyifbody.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/emptyifbody")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,10 @@ func TestDetectionOfEmptyIfBody(t *testing.T) {
 		{SrcLine: 11, Type: linter.EMPTY_IF_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -113,7 +116,7 @@ func TestDetectionOfEmptyIfBody(t *testing.T) {
 // Testing rule: EMPTY_ELSE_BODY
 // Empty else-bodies are unnecessary and ineffective.
 func TestDetectionOfEmptyElseBody(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_emptyelsebody.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/emptyelsebody")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +125,10 @@ func TestDetectionOfEmptyElseBody(t *testing.T) {
 		{SrcLine: 16, Type: linter.EMPTY_ELSE_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -130,7 +136,7 @@ func TestDetectionOfEmptyElseBody(t *testing.T) {
 // Testing rule: EMPTY_FOR_BODY
 // Empty for-bodies are unnecessary and ineffective.
 func TestDetectionOfEmptyForBody(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_emptyforbody.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/emptyforbody")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +145,10 @@ func TestDetectionOfEmptyForBody(t *testing.T) {
 		{SrcLine: 8, Type: linter.EMPTY_FOR_BODY},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -147,7 +156,7 @@ func TestDetectionOfEmptyForBody(t *testing.T) {
 // Testing rule: RETURN_KILLS_CODE
 // One should never return unconditionally, except from the last statement in a func or method.
 func TestDetectionOfEarlyReturn(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_earlyreturn.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/earlyreturn")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,25 +165,10 @@ func TestDetectionOfEarlyReturn(t *testing.T) {
 		{SrcLine: 13, Type: linter.RETURN_KILLS_CODE},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
-		t.Fatal(err)
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
 	}
-}
-
-// Testing rule: NO_ELSE_RETURN
-// When an If block contains a return statement, the Else block becoms unnecessary.
-func TestDetectionOfReturnBeforeElse(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_elsereturn.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualViolations := []actualViolation{
-		{SrcLine: 14, Type: linter.RETURN_KILLS_CODE},
-		{SrcLine: 22, Type: linter.RETURN_KILLS_CODE},
-	}
-
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -183,7 +177,7 @@ func TestDetectionOfReturnBeforeElse(t *testing.T) {
 // Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
 // is considered confusing and harmful.
 func TestDetectionOfGoTo(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_goto.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/goto")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +186,10 @@ func TestDetectionOfGoTo(t *testing.T) {
 		{SrcLine: 12, Type: linter.GOTO_USED},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -201,7 +198,7 @@ func TestDetectionOfGoTo(t *testing.T) {
 // Jumping around in the code using GOTO (including BREAK, CONTINUE, GOTO, FALLTHROUGH)
 // is considered confusing and harmful.
 func TestDetectionOfLabeledBranching(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_labeledbranch.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/labeledbranch")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +207,10 @@ func TestDetectionOfLabeledBranching(t *testing.T) {
 		{SrcLine: 15, Type: linter.GOTO_USED},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -218,7 +218,7 @@ func TestDetectionOfLabeledBranching(t *testing.T) {
 // Testing rule: ERROR_IGNORED
 // Errors should never be ignored, might lead to program crashes.
 func TestDetectionOfIgnoredErrors(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_ignoreerror.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/errorignored")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,35 +228,14 @@ func TestDetectionOfIgnoredErrors(t *testing.T) {
 		{SrcLine: 17, Type: linter.ERROR_IGNORED},
 		{SrcLine: 22, Type: linter.ERROR_IGNORED},
 		{SrcLine: 27, Type: linter.ERROR_IGNORED},
-		{SrcLine: 30, Type: linter.ERROR_IGNORED},
-		{SrcLine: 46, Type: linter.ERROR_IGNORED},
+		{SrcLine: 35, Type: linter.ERROR_IGNORED},
+		{SrcLine: 51, Type: linter.ERROR_IGNORED},
 	}
 
-	if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
-		t.Fatal(err)
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
 	}
-}
-
-/*
-// Testing rule: STRING_METHOD_DEFINES_ITSELF
-func TestDetectionOfStringMethodDefiningItself(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_stringmethod.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, vio := range expectedViolations {
-		log.Printf("- %s\n", vio)
-	}
-
-	correctViolations := []actualViolation{
-		actualViolation{SrcLine: 48, Type: linter.STRING_DEFINES_ITSELF},
-		actualViolation{SrcLine: 58, Type: linter.STRING_DEFINES_ITSELF},
-		actualViolation{SrcLine: 63, Type: linter.STRING_DEFINES_ITSELF},
-		actualViolation{SrcLine: 69, Type: linter.STRING_DEFINES_ITSELF},
-	}
-
-	if err := verifyViolations(expectedViolations, correctViolations); err != nil {
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -264,49 +243,33 @@ func TestDetectionOfStringMethodDefiningItself(t *testing.T) {
 // Testing rule: CONDITION_EVALUATED_STATICALLY
 // Condition that can be evaluated statically are wasted and performance-reducing.
 func TestDetectionOfConditionEvaluatedStatically(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_staticconditions.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/staticconditions")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 14, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 18, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 22, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 26, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 33, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 39, Type: linter.CONDITION_EVALUATED_STATICALLY},
-		actualViolation{SrcLine: 40, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		{SrcLine: 14, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		{SrcLine: 18, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		{SrcLine: 22, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		{SrcLine: 26, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		//{SrcLine: 32, Type: linter.CONDITION_EVALUATED_STATICALLY}, TODO: Possible to statically trace a variable value?
+		{SrcLine: 38, Type: linter.CONDITION_EVALUATED_STATICALLY},
+		{SrcLine: 41, Type: linter.CONDITION_EVALUATED_STATICALLY},
 	}
 
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// Testing rule: NO_BUFFERED_FLUSHING
-// Always flush the buffer when terminating, else the last output will not written.
-func TestDetectionOfNotFlushingBufferedWriter(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_bufferwriting.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	actualViolations := []actualViolation{
-		actualViolation{SrcLine: 14, Type: linter.BUFFER_NOT_FLUSHED},
-	}
-
-	if err := verifyViolations(expectedViolations, actualViolations); err != nil {
-		t.Fatal(err)
-	}
-}
-
-*/
-
-// Issue #4 list a scenario where the tool detects a false positive of rule ERROR_IGNORED.
+// GitHub Issue #4 list a scenario where the tool detects a false positive of rule ERROR_IGNORED.
 // This test verifies correction of the behaviour.
 func TestDetectionOfErrorIgnoredInReturn(t *testing.T) {
-	expectedViolations, err := linter.DetectViolations("./testcode/_errorinreturn.go")
+	expectedViolations, err := linter.DetectViolations("./testcode/errorinreturn")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,9 +277,52 @@ func TestDetectionOfErrorIgnoredInReturn(t *testing.T) {
 	actualViolations := []actualViolation{}
 
 	if len(expectedViolations) > 0 {
-		// Only verify violations of there is more than one file containing violations!
-		if err := verifyViolations(expectedViolations[0].Violations, actualViolations); err != nil {
+		// Only verify violations if there is more than one file containing violations!
+		if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
 			t.Fatal(err)
 		}
 	}
 }
+
+func TestDetectionOfHighCyclomatiComplexity(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/cyclomaticomplexity")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualViolations := []actualViolation{
+		{SrcLine: 13, Type: linter.CYCLOMATIC_COMPLEXITY},
+	}
+
+	if len(expectedViolations) > 0 {
+		// Only verify violations if there is more than one file containing violations!
+		if err := verifyViolations(expectedViolations[0].Violations[0].Violations, actualViolations); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+//TODO: Implement!
+/*
+// Testing rule: STRING_METHOD_DEFINES_ITSELF
+func TestDetectionOfStringMethodDefiningItself(t *testing.T) {
+	expectedViolations, err := linter.DetectViolations("./testcode/stringmethod")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	correctViolations := []actualViolation{
+		{SrcLine: 48, Type: linter.STRING_CALLS_ITSELF},
+		{SrcLine: 58, Type: linter.STRING_CALLS_ITSELF},
+		{SrcLine: 63, Type: linter.STRING_CALLS_ITSELF},
+		{SrcLine: 69, Type: linter.STRING_CALLS_ITSELF},
+	}
+
+	if len(expectedViolations) <= 0 {
+		t.Fatal("There is no functions containing violations.")
+	}
+	if err := verifyViolations(expectedViolations[0].Violations[0].Violations, correctViolations); err != nil {
+		t.Fatal(err)
+	}
+}
+*/

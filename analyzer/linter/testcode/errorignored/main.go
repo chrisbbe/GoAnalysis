@@ -26,6 +26,11 @@ func main() {
 	// Error returned here should be handled!
 	writeToConsole("Hello console")
 
+	err := writeToConsole("Hello console")
+	if err != nil {
+		panic(err)
+	}
+
 	// Should also detect the error not detected here!
 	os.Open("file.go")
 }

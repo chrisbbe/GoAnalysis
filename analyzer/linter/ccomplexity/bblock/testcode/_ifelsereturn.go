@@ -3,6 +3,8 @@
 // be found in the LICENSE file.
 package main
 
+import "log"
+
 func main() {
 
 	if 11 == 12 {

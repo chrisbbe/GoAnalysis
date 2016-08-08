@@ -1,15 +1,16 @@
 // Copyright (c) 2015-2016 The GoAnalysis Authors.  All rights reserved.
 // Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
-package ccomplexity
+package ccomplexity_test
 
 import (
 	"fmt"
+	"github.com/chrisbbe/GoAnalysis/analyzer/linter/ccomplexity"
 	"io/ioutil"
 	"testing"
 )
 
-func verifyCyclomaticComplexity(expectedComplexity []*FunctionComplexity, correctComplexity []FunctionComplexity) error {
+func verifyCyclomaticComplexity(expectedComplexity []*ccomplexity.FunctionComplexity, correctComplexity []ccomplexity.FunctionComplexity) error {
 	if len(expectedComplexity) != len(correctComplexity) {
 		return fmt.Errorf("Number of functions should be %d, but are %d!\n", len(expectedComplexity), len(correctComplexity))
 	}
@@ -29,16 +30,17 @@ func verifyCyclomaticComplexity(expectedComplexity []*FunctionComplexity, correc
 }
 
 func TestSimpleComplexityFunctionLevel(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_helloworld.go")
+	filePath := "./testcode/_helloworld.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	expectedCyclomaticComplexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	correctCyclomaticComplexity := []FunctionComplexity{
+	correctCyclomaticComplexity := []ccomplexity.FunctionComplexity{
 		{Name: "main", Complexity: 1},
 	}
 
@@ -48,18 +50,17 @@ func TestSimpleComplexityFunctionLevel(t *testing.T) {
 }
 
 func TestIfElseComplexityFunctionLevel(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_ifelse.go")
+	filePath := "./testcode/_ifelse.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	expectedCyclomaticComplexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedCyclomaticComplexity[0].ControlFlowGraph.Draw("ifelse")
-
-	correctCyclomaticComplexity := []FunctionComplexity{
+	correctCyclomaticComplexity := []ccomplexity.FunctionComplexity{
 		{Name: "main", Complexity: 2},
 	}
 
@@ -69,16 +70,17 @@ func TestIfElseComplexityFunctionLevel(t *testing.T) {
 }
 
 func TestMethodComplexity(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_swap.go")
+	filePath := "./testcode/_swap.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	expectedCyclomaticComplexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	correctCyclomaticComplexity := []FunctionComplexity{
+	correctCyclomaticComplexity := []ccomplexity.FunctionComplexity{
 		{Name: "main", Complexity: 1},
 		{Name: "swap", Complexity: 1},
 	}
@@ -89,16 +91,17 @@ func TestMethodComplexity(t *testing.T) {
 }
 
 func TestSwitcherComplexity(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_switcher.go")
+	filePath := "./testcode/_switcher.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	expectedCyclomaticComplexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	correctCyclomaticComplexity := []FunctionComplexity{
+	correctCyclomaticComplexity := []ccomplexity.FunctionComplexity{
 		{Name: "main", Complexity: 1},
 		{Name: "monthNumberToString", Complexity: 14},
 	}
@@ -109,15 +112,16 @@ func TestSwitcherComplexity(t *testing.T) {
 }
 
 func TestGreatestCommonDivisorComplexity(t *testing.T) {
-	srcFile, err := ioutil.ReadFile("./testcode/_gcd.go")
+	filePath := "./testcode/_gcd.go"
+	srcFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedCyclomaticComplexity, err := GetCyclomaticComplexityFunctionLevel(srcFile)
+	expectedCyclomaticComplexity, err := ccomplexity.GetCyclomaticComplexityFunctionLevel(filePath, srcFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	correctCyclomaticComplexity := []FunctionComplexity{
+	correctCyclomaticComplexity := []ccomplexity.FunctionComplexity{
 		{Name: "gcd", Complexity: 2},
 		{Name: "main", Complexity: 1},
 	}
